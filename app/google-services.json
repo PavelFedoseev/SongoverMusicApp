@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "687550955157",
+    "project_id": "songoverapp",
+    "storage_bucket": "songoverapp.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:687550955157:android:2f2095131d8601087b659c",
+        "android_client_info": {
+          "package_name": "com.project.songovermusicapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "687550955157-degnm3sglr31apo9kms1sl96sq6qltmu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCb4YGxdS_vfmGFMHkx2ZbkmyatvDp-5U4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "687550955157-degnm3sglr31apo9kms1sl96sq6qltmu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
