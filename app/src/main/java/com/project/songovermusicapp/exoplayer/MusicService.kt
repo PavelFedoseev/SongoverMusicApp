@@ -20,6 +20,7 @@ import com.project.songovermusicapp.exoplayer.callbacks.MusicPlayerListener
 import com.project.songovermusicapp.exoplayer.callbacks.MusicPlayerNotificationListener
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
+import timber.log.Timber
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -113,9 +114,10 @@ class MusicService : MediaBrowserServiceCompat() {
         itemToPlay: MediaMetadataCompat?,
         playNow: Boolean
     ) {
+        Timber.tag("Music Service").d(" Service started at tread: ${Thread.currentThread()}")
         val currentSongIndex = if (currentPlayingSong == null) 0 else songs.indexOf(itemToPlay)
-        exoPlayer.setMediaSource(firebaseMusicSource.asMediaSource(dataSourceFactory))
-        exoPlayer.prepare()
+//        exoPlayer.setMediaSource(firebaseMusicSource.asMediaSource(dataSourceFactory))
+        exoPlayer.prepare(firebaseMusicSource.asMediaSource(dataSourceFactory))
         exoPlayer.seekTo(currentSongIndex, 0L)
         exoPlayer.playWhenReady = playNow
     }

@@ -32,12 +32,11 @@ class FirebaseMusicSource @Inject constructor(private val musicDatabase: MusicDa
                 }
             } else {
                 field = value
-
             }
         }
 
     suspend fun fetchMedia() = withContext(Dispatchers.IO) {
-        state = STATE_INITIALIZED
+        state = STATE_INITIALIZING
         val allSongs = musicDatabase.getAllSongs()
         songs = allSongs.map { song ->
             MediaMetadataCompat.Builder()

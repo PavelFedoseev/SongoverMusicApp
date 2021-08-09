@@ -45,12 +45,12 @@ class MusicServiceConnection(private val context: Context) {
         get() = mediaController.transportControls
 
     /** Подписка на получение объектов медиа по определённому parentId*/
-    fun subscribe(parrentId: String, callback: MediaBrowserCompat.SubscriptionCallback){
-        mediaBrowser.subscribe(parrentId, callback)
+    fun subscribe(parentId: String, callback: MediaBrowserCompat.SubscriptionCallback){
+        mediaBrowser.subscribe(parentId, callback)
     }
     /** Отписка от объектов медиа по parentId*/
-    fun unsubscribe(parrentId: String, callback: MediaBrowserCompat.SubscriptionCallback){
-        mediaBrowser.unsubscribe(parrentId, callback)
+    fun unsubscribe(parentId: String, callback: MediaBrowserCompat.SubscriptionCallback){
+        mediaBrowser.unsubscribe(parentId, callback)
     }
 
     private inner class MediaBrowserConnectionCallback(
