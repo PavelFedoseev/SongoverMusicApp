@@ -1,10 +1,8 @@
-package com.project.songovermusicapp.presentation.ui
+package com.project.songovermusicapp.presentation.musiclist
 
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
-import android.os.Build
-import androidx.annotation.RequiresApi
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,63 +15,39 @@ import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.lifecycle.LiveData
-import androidx.palette.graphics.Palette
-import com.bumptech.glide.load.resource.bitmap.BitmapTransitionOptions
+import com.project.songovermusicapp.R
 import com.project.songovermusicapp.data.entities.Song
-import com.project.songovermusicapp.data.other.Resource
-import com.project.songovermusicapp.data.other.Status
-import com.project.songovermusicapp.presentation.ui.theme.SongImageSize
-import com.project.songovermusicapp.presentation.ui.theme.SongPadding
+import com.project.songovermusicapp.presentation.ui.theme.*
+import com.project.songovermusicapp.presentation.ui.viewmodel.SongItem
+import com.project.songovermusicapp.presentation.ui.viewmodel.SongState
+import com.project.songovermusicapp.presentation.util.OnDominantColorListener
+import com.project.songovermusicapp.presentation.util.calcDominantColor
 import com.skydoves.landscapist.CircularRevealedImage
 import com.skydoves.landscapist.glide.GlideImage
-import com.skydoves.landscapist.glide.GlideImageState
-import timber.log.Timber
-import kotlin.math.absoluteValue
-
-@Composable
-fun LiveDataComponent(
-    mediaItemLiveData: LiveData<Resource<List<Song>>>,
-    listener: OnItemClickListener
-) {
-    Timber.tag("Music Service").d(" Service started at tread: ${Thread.currentThread()}")
-    val resource by mediaItemLiveData.observeAsState()
-
-    when (resource?.status) {
-        Status.SUCCESS -> {
-            resource?.data?.let {
-                MusicListScreen(list = it, listener)
-            }
-        }
-        Status.ERROR -> {
-
-        }
-        Status.LOADING -> {
-            MusicProgressBar()
-        }
-    }
-}
 
 
 @Composable
-fun MusicListScreen(
+fun MusicList(
     list: List<Song>,
-    listener: OnItemClickListener
+    itemClickListener: OnItemClickListener,
+    curPlayingSongItem: SongItem?
 ) {
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
+    LazyColumn(modifier = Modifier ) {
         items(items = list, itemContent = { song: Song ->
-            SongItem(song = song, listener)
+            var songState = SongState.STOPPED
+            if(curPlayingSongItem?.song?.mediaId == song.mediaId)
+                songState = curPlayingSongItem.songState
+            SongItem(song = song, itemClickListener, songState)
         })
     }
 }
@@ -84,20 +58,23 @@ fun MusicProgressBar() {
 }
 
 @Composable
-fun SongItem(song: Song, listener: OnItemClickListener) {
+fun SongItem(song: Song, itemClickListener: OnItemClickListener, songState : SongState = SongState.STOPPED) {
+
+
     val defaultDominantColor = MaterialTheme.colors.surface
     var dominantColor by remember {
         mutableStateOf(defaultDominantColor)
     }
+    val itemColor by animateColorAsState(targetValue = dominantColor)
     Box(modifier = Modifier.clickable {
-        listener.onItemClick(song)
+        itemClickListener.onItemClickPlay(song)
     }) {
         Box(
             modifier = Modifier
                 .background(
                     Brush.horizontalGradient(
                         colors = listOf(
-                            dominantColor,
+                            itemColor,
                             defaultDominantColor
                         ),
                         endX = 700f
@@ -116,7 +93,7 @@ fun SongItem(song: Song, listener: OnItemClickListener) {
                     modifier = Modifier
                         .width(SongImageSize)
                         .height(SongImageSize),
-                    shape = RoundedCornerShape(5.dp),
+                    shape = RoundedCornerShape(SongImageRoundness),
                     elevation = 8.dp
                 ) {
                     GlideImage(
@@ -141,15 +118,19 @@ fun SongItem(song: Song, listener: OnItemClickListener) {
                         },
                         alignment = Alignment.Center,
                         success = { imageState ->
-                            calcDominantColor(
-                                BitmapDrawable(
-                                    LocalContext.current.resources,
-                                    imageState.imageBitmap?.asAndroidBitmap()
-                                )
-                            ) {
-                                dominantColor = it
-                            }
                             imageState.imageBitmap?.let {
+                                calcDominantColor(
+                                    BitmapDrawable(
+                                        LocalContext.current.resources,
+                                        Bitmap.createScaledBitmap(
+                                            it.asAndroidBitmap(),
+                                            20, 20,
+                                            false
+                                        )
+                                    )
+                                ) {
+                                    dominantColor = it
+                                }
                                 CircularRevealedImage(
                                     bitmap = it,
                                     contentDescription = "Music Image",
@@ -163,11 +144,20 @@ fun SongItem(song: Song, listener: OnItemClickListener) {
 
                         }
                     )
+                    if(songState == SongState.PLAYING){
+                        Image(painter = painterResource(id = R.drawable.ic_pause), contentDescription = stringResource(
+                            id = R.string.cd_pause_button
+                        ))
+                    }
+                    else if(songState == SongState.PAUSED)
+                        Image(painter = painterResource(id = R.drawable.ic_play), contentDescription = stringResource(
+                            id = R.string.cd_play_button
+                        ))
                 }
                 Spacer(modifier = Modifier.width(30.dp))
                 Column {
-                    Text(text = song.title, fontSize = 17.sp)
-                    Text(text = song.subtitle, fontSize = 13.sp)
+                    Text(text = song.title, fontSize = SongItemTextTitle)
+                    Text(text = song.subtitle, fontSize = SongItemTextSubtitle)
                 }
             }
         }
@@ -177,19 +167,8 @@ fun SongItem(song: Song, listener: OnItemClickListener) {
 }
 
 interface OnItemClickListener {
-    fun onItemClick(song: Song)
+    fun onItemClickPlay(song: Song)
+    fun onItemClickNext()
+    fun onItemClickPrevious()
 }
 
-
-fun calcDominantColor(drawable: Drawable, onFinish: (Color) -> Unit) {
-    val bmp = (drawable as BitmapDrawable).bitmap.copy(Bitmap.Config.ARGB_8888, true)
-
-
-    Palette.from(bmp).generate { palette ->
-        palette?.dominantSwatch?.rgb?.let { colorValue ->
-            var value = Color(colorValue)
-            value = Color(red = value.red, green = value.green, blue = value.blue, alpha = 0.6f)
-            onFinish(value)
-        }
-    }
-}

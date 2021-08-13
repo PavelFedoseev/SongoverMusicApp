@@ -10,4 +10,6 @@ object Constants {
     const val MEDIA_ROOT_ID = "root_id"
 
     const val NETWORK_ERROR_EVENT = "Network Error"
+
+    const val UPDATE_PLAYER_POSITION_INTERVAL = 100L
 }

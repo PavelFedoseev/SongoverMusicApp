@@ -5,4 +5,14 @@
     <string name="toast_player_error">An unknown error occured</string>
     <string name="message_network_error">Unable connect to the server :(</string>
     <string name="message_connection_suspended">Connection was suspended.</string>
+
+    <string name="tab_remote">Remote</string>
+    <string name="tab_local">Local</string>
+
+    <string name="cd_info">Info screen</string>
+    <string name="cd_play_button">Play button</string>
+    <string name="cd_pause_button">Pause button</string>
+    <string name="cd_splash">Splash screen</string>
+    <string name="cd_previous">Previous song</string>
+    <string name="cd_next">Next song</string>
 </resources>
