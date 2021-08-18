@@ -8,7 +8,7 @@ import android.support.v4.media.session.PlaybackStateCompat
 import com.google.android.exoplayer2.ControlDispatcher
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
-import com.project.songovermusicapp.exoplayer.FirebaseMusicSource
+import com.project.songovermusicapp.exoplayer.source.FirebaseMusicSource
 
 class MusicPlaybackPreparer(
     private val firebaseMusicSource: FirebaseMusicSource,

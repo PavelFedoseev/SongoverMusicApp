@@ -97,16 +97,20 @@ fun BottomBar(
                 navController.navigate("music_item_screen")
             }) {
             LaunchedEffect(key1 = curSongItem) {
-                if (songItems.isNotEmpty())
+
+                if (songItems.isNotEmpty()) {
+                    val songItem = songItems.find {
+                        it.mediaId == curSongItem?.song?.mediaId
+                    }
+                    if(songItem != null && songItems.indexOf(songItem)!= -1)
                     pagerState.animateScrollToPage(
-                        songItems.indexOf(songItems.find {
-                            it.mediaId == curSongItem?.song?.mediaId
-                        }), initialVelocity = 0.5f,
+                        songItems.indexOf(songItem), initialVelocity = 0.5f,
                         animationSpec = tween(
                             durationMillis = 700,
                             easing = FastOutSlowInEasing
                         )
                     )
+                }
             }
             HorizontalPager(
                 state = pagerState,
@@ -156,7 +160,7 @@ fun BottomBar(
                                 )
                             ) {
                                 dominantColorListener.calculated(it)
-                                dominantColor = it
+                                dominantColor = it.copy(alpha = 0.1f)
                             }
                             CircularRevealedImage(
                                 bitmap = imageBitmap,

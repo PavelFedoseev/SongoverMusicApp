@@ -28,6 +28,7 @@ val MusicItemScreenImageRoundness = 30.dp
 val MusicItemScreenControllerBtnHeight = 60.dp
 val MusicItemScreenControllerBtnPadding = 10.dp
 val MusicItemScreenControllerHeight = 60.dp
+val MusicItemScreenControllerProgressSize = 200.dp
 
 val MusicItemScreenTitle = 20.sp
 val MusicItemScreenSubtitle = 18.sp

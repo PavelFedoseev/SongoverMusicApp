@@ -1,7 +1,6 @@
 package com.project.songovermusicapp
 
 import android.os.Bundle
-import android.support.v4.media.session.PlaybackStateCompat
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -18,36 +17,27 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.navArgument
 import androidx.navigation.compose.rememberNavController
-import com.bumptech.glide.RequestManager
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.project.songovermusicapp.data.entities.Song
 import com.project.songovermusicapp.presentation.MainContent
-import com.project.songovermusicapp.presentation.musiclist.OnItemClickListener
 import com.project.songovermusicapp.presentation.musicitem.MusicItemScreen
+import com.project.songovermusicapp.presentation.musiclist.OnItemClickListener
 import com.project.songovermusicapp.presentation.splash.SplashScreen
 import com.project.songovermusicapp.presentation.ui.theme.SongoverMusicAppTheme
-import com.project.songovermusicapp.presentation.ui.theme.White200
 import com.project.songovermusicapp.presentation.ui.viewmodel.MainViewModel
 import com.project.songovermusicapp.presentation.util.OnDominantColorListener
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 @ExperimentalPagerApi
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    @Inject
-    lateinit var glide: RequestManager
-
     private val mainViewModel: MainViewModel by viewModels()
-
 
     @ExperimentalMaterialApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //initObservers()
         setContent {
             val viewState by mainViewModel.state.collectAsState()
 
@@ -124,7 +114,14 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onDestroy() {
+        viewModelStore.clear()
+        super.onDestroy()
+    }
 }
+
+
 
 /** Composable preview*/
 @ExperimentalPagerApi

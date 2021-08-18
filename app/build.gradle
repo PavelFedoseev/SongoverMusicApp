@@ -74,6 +74,8 @@ dependencies {
     implementation 'com.google.accompanist:accompanist-pager:0.16.1'
     implementation 'com.google.accompanist:accompanist-insets:0.16.1'
 
+    //LeakCanary
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.7'
 
     // Architectural Components
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1"

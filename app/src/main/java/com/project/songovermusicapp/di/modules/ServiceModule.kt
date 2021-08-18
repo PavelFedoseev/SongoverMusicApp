@@ -7,7 +7,7 @@ import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import com.project.songovermusicapp.data.constants.Constants.APPLICATION_NAME
-import com.project.songovermusicapp.data.remote.MusicDatabase
+import com.project.songovermusicapp.data.remote.MusicFirestoreDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,7 +21,7 @@ object ServiceModule {
 
     @ServiceScoped
     @Provides
-    fun provideMusicDatabase() = MusicDatabase()
+    fun provideMusicDatabase() = MusicFirestoreDatabase()
 
     @ServiceScoped
     @Provides

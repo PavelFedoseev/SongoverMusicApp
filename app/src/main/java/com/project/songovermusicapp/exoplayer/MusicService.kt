@@ -13,11 +13,13 @@ import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.project.songovermusicapp.data.constants.Constants.MEDIA_ROOT_ID
+import com.project.songovermusicapp.data.constants.Constants.MEDIA_FIREBASE_ID
+import com.project.songovermusicapp.data.constants.Constants.MEDIA_LOCAL_ID
 import com.project.songovermusicapp.data.constants.Constants.NETWORK_ERROR_EVENT
 import com.project.songovermusicapp.exoplayer.callbacks.MusicPlaybackPreparer
 import com.project.songovermusicapp.exoplayer.callbacks.MusicPlayerListener
 import com.project.songovermusicapp.exoplayer.callbacks.MusicPlayerNotificationListener
+import com.project.songovermusicapp.exoplayer.source.FirebaseMusicSource
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import timber.log.Timber
@@ -61,7 +63,7 @@ class MusicService : MediaBrowserServiceCompat() {
         clientUid: Int,
         rootHints: Bundle?
     ): BrowserRoot {
-        return BrowserRoot(MEDIA_ROOT_ID, null)
+        return BrowserRoot(MEDIA_FIREBASE_ID, null)
     }
 
     override fun onCreate() {
@@ -120,6 +122,7 @@ class MusicService : MediaBrowserServiceCompat() {
         exoPlayer.prepare(firebaseMusicSource.asMediaSource(dataSourceFactory))
         exoPlayer.seekTo(currentSongIndex, 0L)
         exoPlayer.playWhenReady = playNow
+        currentSongDuration = exoPlayer.duration
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
@@ -140,7 +143,7 @@ class MusicService : MediaBrowserServiceCompat() {
         result: Result<MutableList<MediaBrowserCompat.MediaItem>>
     ) {
         when (parentId) {
-            MEDIA_ROOT_ID -> {
+            MEDIA_FIREBASE_ID -> {
                 val resultSent = firebaseMusicSource.whenReady { isInitialized ->
                     if (isInitialized) {
                         result.sendResult(firebaseMusicSource.asMediaItems())
@@ -161,6 +164,10 @@ class MusicService : MediaBrowserServiceCompat() {
                     result.detach()
                 }
             }
+            MEDIA_LOCAL_ID -> {
+
+            }
+
         }
     }
 

@@ -7,7 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.project.songovermusicapp.data.constants.Constants
-import com.project.songovermusicapp.data.constants.Constants.MEDIA_ROOT_ID
+import com.project.songovermusicapp.data.constants.Constants.MEDIA_FIREBASE_ID
 import com.project.songovermusicapp.data.entities.Song
 import com.project.songovermusicapp.data.other.Resource
 import com.project.songovermusicapp.exoplayer.MusicService
@@ -32,6 +32,7 @@ class MainViewModel @Inject constructor(
 ) : ViewModel() {
     // Выбранная категория
     private val selectedCategory = MutableStateFlow(MainCategory.Remote)
+
     // Доступные категории
     private val categories = MutableStateFlow(MainCategory.values().asList())
 
@@ -76,13 +77,13 @@ class MainViewModel @Inject constructor(
             }.catch { throwable ->
                 // TODO: emit a UI error here. For now we'll just rethrow
                 throw throwable
-            }.collect{
+            }.collect {
                 _state.value = it
             }
         }
         _mediaItems.postValue(Resource.loading(null))
         musicServiceConnection.subscribe(
-            MEDIA_ROOT_ID,
+            MEDIA_FIREBASE_ID,
             object : MediaBrowserCompat.SubscriptionCallback() {
                 override fun onChildrenLoaded(
                     parentId: String,
@@ -103,58 +104,60 @@ class MainViewModel @Inject constructor(
             })
         updateCurrentPlayerPosition()
     }
+
     /** Функция перехода к следующему треку */
     fun skipToNextSong() {
         musicServiceConnection.transportControls.skipToNext()
     }
+
     /** Функция перехода к предыдущему треку */
     fun skipToPreviousSong() {
         musicServiceConnection.transportControls.skipToPrevious()
     }
+
     /** Функция перехода к точке трека */
     fun seekTo(pos: Long) {
         musicServiceConnection.transportControls.seekTo(pos)
     }
 
     /** Функция переключателя контента */
-    fun playOrToggleSong(mediaItem: Song, toggle: Boolean = false) {
+    fun playOrToggleSong(mediaItem: Song, toggle: Boolean = false, prepare: Boolean = false) {
         val isPrepared = playbackState.value?.isPrepared ?: false
-        if(isPrepared && mediaItem.mediaId == curPlayingSong.value?.getString(METADATA_KEY_MEDIA_ID))
+        if (isPrepared && mediaItem.mediaId == curPlayingSong.value?.getString(METADATA_KEY_MEDIA_ID))
             playbackState.value?.let { playbackState ->
                 when {
-                    playbackState.isPlaying -> if(toggle) musicServiceConnection.transportControls.pause()
-                    playbackState.isPlayEnabled -> musicServiceConnection.transportControls.play()
+                    playbackState.isPlaying -> if (toggle) musicServiceConnection.transportControls.pause()
+                    playbackState.isPlayEnabled -> if (!prepare) musicServiceConnection.transportControls.play() else musicServiceConnection.transportControls.prepare()
                     else -> Unit
                 }
             }
-        else{
+        else {
             musicServiceConnection.transportControls.playFromMediaId(mediaItem.mediaId, null)
         }
 
     }
 
-    fun onItemSongSelected(mediaItem: Song, toggle: Boolean){
+    fun onItemSongSelected(mediaItem: Song, toggle: Boolean) {
         playOrToggleSong(mediaItem, toggle)
     }
 
-    fun onMainCategorySelected(category: MainCategory){
+    fun onMainCategorySelected(category: MainCategory) {
         selectedCategory.value = category
     }
 
     override fun onCleared() {
         super.onCleared()
         musicServiceConnection.unsubscribe(
-            MEDIA_ROOT_ID,
+            MEDIA_FIREBASE_ID,
             object : MediaBrowserCompat.SubscriptionCallback() {})
     }
 
 
-
     private fun updateCurrentPlayerPosition() {
         viewModelScope.launch {
-            while(true) {
-                val pos = playbackState.value?.currentPlaybackPosition?:0
-                if(curPlayerPosition.value != pos) {
+            while (true) {
+                val pos = playbackState.value?.currentPlaybackPosition ?: 0
+                if (curPlayerPosition.value != pos) {
                     _curPlayerPosition.postValue(pos)
                     _curSongDuration.postValue(MusicService.currentSongDuration)
                 }
@@ -164,7 +167,8 @@ class MainViewModel @Inject constructor(
     }
 
 }
-enum class MainCategory{
+
+enum class MainCategory {
     Local, Remote
 }
 
@@ -175,15 +179,15 @@ data class MainViewState(
     val errorMessage: String? = null
 )
 
-data class SongItem(val songState: SongState, val song: Song? = null){
-    companion object{
+data class SongItem(val songState: SongState, val song: Song? = null) {
+    companion object {
         fun playing(song: Song) = SongItem(SongState.PLAYING, song)
         fun paused(song: Song) = SongItem(SongState.PAUSED, song)
         fun stopped() = SongItem(SongState.STOPPED)
     }
 }
 
-enum class SongState{
+enum class SongState {
     PLAYING,
     PAUSED,
     STOPPED

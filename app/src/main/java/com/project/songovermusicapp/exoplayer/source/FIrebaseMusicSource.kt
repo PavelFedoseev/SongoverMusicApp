@@ -1,4 +1,4 @@
-package com.project.songovermusicapp.exoplayer
+package com.project.songovermusicapp.exoplayer.source
 
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaBrowserCompat.MediaItem.FLAG_PLAYABLE
@@ -9,13 +9,14 @@ import androidx.core.net.toUri
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.project.songovermusicapp.data.remote.MusicDatabase
-import com.project.songovermusicapp.exoplayer.State.*
+import com.project.songovermusicapp.data.remote.MusicFirestoreDatabase
+import com.project.songovermusicapp.exoplayer.source.State.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-class FirebaseMusicSource @Inject constructor(private val musicDatabase: MusicDatabase) {
+class FirebaseMusicSource @Inject constructor(private val musicFirestoreDatabase: MusicFirestoreDatabase) :
+    MediaSource {
 
     var songs = emptyList<MediaMetadataCompat>()
 
@@ -35,9 +36,9 @@ class FirebaseMusicSource @Inject constructor(private val musicDatabase: MusicDa
             }
         }
 
-    suspend fun fetchMedia() = withContext(Dispatchers.IO) {
+    override suspend fun fetchMedia() = withContext(Dispatchers.IO) {
         state = STATE_INITIALIZING
-        val allSongs = musicDatabase.getAllSongs()
+        val allSongs = musicFirestoreDatabase.getAllSongs()
         songs = allSongs.map { song ->
             MediaMetadataCompat.Builder()
                 .putString(METADATA_KEY_TITLE, song.title)
@@ -54,7 +55,7 @@ class FirebaseMusicSource @Inject constructor(private val musicDatabase: MusicDa
         state = STATE_INITIALIZED
     }
 
-    fun asMediaSource(dataSourceFactory: DefaultDataSourceFactory): ConcatenatingMediaSource{
+    override fun asMediaSource(dataSourceFactory: DefaultDataSourceFactory): ConcatenatingMediaSource {
         val concatenatingMediaSource = ConcatenatingMediaSource()
         songs.forEach { song ->
             val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
@@ -64,7 +65,7 @@ class FirebaseMusicSource @Inject constructor(private val musicDatabase: MusicDa
         return concatenatingMediaSource
     }
 
-    fun asMediaItems() = songs.map{ song ->
+    override fun asMediaItems() = songs.map { song ->
         val desc = MediaDescriptionCompat.Builder()
             .setMediaUri(song.getString(METADATA_KEY_MEDIA_URI).toUri())
             .setTitle(song.description.title)
@@ -75,7 +76,7 @@ class FirebaseMusicSource @Inject constructor(private val musicDatabase: MusicDa
         MediaBrowserCompat.MediaItem(desc, FLAG_PLAYABLE)
     }.toMutableList()
 
-    fun whenReady(action: (Boolean) -> Unit): Boolean {
+    override fun whenReady(action: (Boolean) -> Unit): Boolean {
         if (state == STATE_CREATED || state == STATE_INITIALIZING) {
             onReadyListeners += action
             return false
@@ -85,11 +86,4 @@ class FirebaseMusicSource @Inject constructor(private val musicDatabase: MusicDa
         }
     }
 
-}
-
-enum class State {
-    STATE_CREATED,
-    STATE_INITIALIZING,
-    STATE_INITIALIZED,
-    STATE_ERROR
 }
