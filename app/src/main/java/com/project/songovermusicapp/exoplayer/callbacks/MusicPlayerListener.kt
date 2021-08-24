@@ -36,4 +36,5 @@ class MusicPlayerListener(
         if(playbackState == Player.STATE_READY && !playWhenReady)
             musicService.stopForeground(false)
     }
+
 }

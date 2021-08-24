@@ -6,10 +6,13 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.project.songovermusicapp.START_CATEGORY
 import com.project.songovermusicapp.data.constants.Constants
 import com.project.songovermusicapp.data.constants.Constants.MEDIA_FIREBASE_ID
+import com.project.songovermusicapp.data.constants.Constants.MEDIA_LOCAL_ID
 import com.project.songovermusicapp.data.entities.Song
 import com.project.songovermusicapp.data.other.Resource
+import com.project.songovermusicapp.data.other.Source
 import com.project.songovermusicapp.exoplayer.MusicService
 import com.project.songovermusicapp.exoplayer.MusicServiceConnection
 import com.project.songovermusicapp.exoplayer.extensions.currentPlaybackPosition
@@ -31,7 +34,7 @@ class MainViewModel @Inject constructor(
     private val musicServiceConnection: MusicServiceConnection
 ) : ViewModel() {
     // Выбранная категория
-    private val selectedCategory = MutableStateFlow(MainCategory.Remote)
+    private val selectedCategory = MutableStateFlow(START_CATEGORY)
 
     // Доступные категории
     private val categories = MutableStateFlow(MainCategory.values().asList())
@@ -44,8 +47,8 @@ class MainViewModel @Inject constructor(
 
     private val refreshing = MutableStateFlow(false)
 
-    private val _mediaItems = MutableLiveData<Resource<List<Song>>>()
-    val mediaItems: LiveData<Resource<List<Song>>> = _mediaItems
+    private val _resourceMediaItems = MutableLiveData<Resource<List<Song>>>()
+    val resourceMediaItems: LiveData<Resource<List<Song>>> = _resourceMediaItems
 
     private val _curSongDuration = MutableLiveData<Long>()
     val curSongDuration: LiveData<Long> = _curSongDuration
@@ -53,6 +56,8 @@ class MainViewModel @Inject constructor(
     private val _curPlayerPosition = MutableLiveData<Long>()
     val curPlayerPosition: LiveData<Long> = _curPlayerPosition
 
+    private val _curPlayingSource = MutableLiveData<Source>()
+    val curPlayingSource: LiveData<Source> = _curPlayingSource
 
     val isConnected = musicServiceConnection.isConnected
     val networkError = musicServiceConnection.networkError
@@ -72,36 +77,16 @@ class MainViewModel @Inject constructor(
                     mainCategories = categories,
                     selectedCategory = selectedCategory,
                     refreshing = refreshing,
-                    errorMessage = null /* TODO */
+                    errorMessage = null
                 )
             }.catch { throwable ->
-                // TODO: emit a UI error here. For now we'll just rethrow
                 throw throwable
             }.collect {
                 _state.value = it
             }
         }
-        _mediaItems.postValue(Resource.loading(null))
-        musicServiceConnection.subscribe(
-            MEDIA_FIREBASE_ID,
-            object : MediaBrowserCompat.SubscriptionCallback() {
-                override fun onChildrenLoaded(
-                    parentId: String,
-                    children: MutableList<MediaBrowserCompat.MediaItem>
-                ) {
-                    super.onChildrenLoaded(parentId, children)
-                    val itemList = children.map {
-                        Song(
-                            it.mediaId.toString(),
-                            it.description.title.toString(),
-                            it.description.subtitle.toString(),
-                            it.description.mediaUri.toString(),
-                            it.description.iconUri.toString()
-                        )
-                    }
-                    _mediaItems.postValue(Resource.success(itemList))
-                }
-            })
+        _resourceMediaItems.postValue(Resource.loading(null))
+        subscribeToSource(MEDIA_LOCAL_ID)
         updateCurrentPlayerPosition()
     }
 
@@ -143,12 +128,23 @@ class MainViewModel @Inject constructor(
 
     fun onMainCategorySelected(category: MainCategory) {
         selectedCategory.value = category
+        when (category) {
+            MainCategory.Remote -> {
+                subscribeToSource(MEDIA_FIREBASE_ID)
+            }
+            MainCategory.Local -> {
+                subscribeToSource(MEDIA_LOCAL_ID)
+            }
+        }
     }
 
     override fun onCleared() {
         super.onCleared()
         musicServiceConnection.unsubscribe(
             MEDIA_FIREBASE_ID,
+            object : MediaBrowserCompat.SubscriptionCallback() {})
+        musicServiceConnection.unsubscribe(
+            MEDIA_LOCAL_ID,
             object : MediaBrowserCompat.SubscriptionCallback() {})
     }
 
@@ -164,6 +160,41 @@ class MainViewModel @Inject constructor(
                 delay(Constants.UPDATE_PLAYER_POSITION_INTERVAL)
             }
         }
+    }
+
+    private fun unsubscribeFromSources() {
+        unsubscribeFromSource(MEDIA_FIREBASE_ID)
+        unsubscribeFromSource(MEDIA_FIREBASE_ID)
+    }
+
+    private fun subscribeToSource(parentId: String) {
+        unsubscribeFromSources()
+        musicServiceConnection.subscribe(
+            parentId,
+            object : MediaBrowserCompat.SubscriptionCallback() {
+                override fun onChildrenLoaded(
+                    parentId: String,
+                    children: MutableList<MediaBrowserCompat.MediaItem>
+                ) {
+                    super.onChildrenLoaded(parentId, children)
+                    val itemList = children.map {
+                        Song(
+                            it.mediaId.toString(),
+                            it.description.title.toString(),
+                            it.description.subtitle.toString(),
+                            it.description.mediaUri.toString(),
+                            it.description.iconUri.toString()
+                        )
+                    }
+                    _resourceMediaItems.postValue(Resource.success(itemList))
+                }
+            })
+    }
+
+    private fun unsubscribeFromSource(parentId: String) {
+        musicServiceConnection.unsubscribe(
+            parentId,
+            object : MediaBrowserCompat.SubscriptionCallback() {})
     }
 
 }

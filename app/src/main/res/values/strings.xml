@@ -2,8 +2,9 @@
     <string name="app_name">SongoverMusicApp</string>
     <string name="notification_channel_description">Music player</string>
     <string name="notification_channel_name">Music Channel</string>
-    <string name="toast_player_error">An unknown error occured</string>
-    <string name="message_network_error">Unable connect to the server :(</string>
+    <string name="toast_player_error">An unknown error occurred</string>
+    <string name="message_network_error">Unable connect to the server</string>
+    <string name="message_external_error">Unable to get music from storage</string>
     <string name="message_connection_suspended">Connection was suspended.</string>
 
     <string name="tab_remote">Remote</string>

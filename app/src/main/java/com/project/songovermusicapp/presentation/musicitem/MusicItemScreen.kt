@@ -3,20 +3,18 @@ package com.project.songovermusicapp.presentation.musicitem
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.support.v4.media.session.PlaybackStateCompat
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.draggable
-import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.material.Card
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -43,8 +41,6 @@ import com.project.songovermusicapp.presentation.util.OnDominantColorListener
 import com.project.songovermusicapp.presentation.util.calcDominantColor
 import com.skydoves.landscapist.CircularRevealedImage
 import com.skydoves.landscapist.glide.GlideImage
-import java.text.SimpleDateFormat
-import java.util.*
 
 @ExperimentalMaterialApi
 @Composable

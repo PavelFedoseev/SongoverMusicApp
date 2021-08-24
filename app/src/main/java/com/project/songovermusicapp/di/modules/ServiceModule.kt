@@ -14,6 +14,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ServiceComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ServiceScoped
+import javax.inject.Singleton
 
 @Module
 @InstallIn(ServiceComponent::class)
@@ -25,17 +26,7 @@ object ServiceModule {
 
     @ServiceScoped
     @Provides
-    fun provideAudioAttributes() = AudioAttributes.Builder()
-        .setContentType(C.CONTENT_TYPE_MUSIC)
-        .setUsage(C.USAGE_MEDIA)
-        .build()
-
-    @ServiceScoped
-    @Provides
-    fun provideExoPlayer(@ApplicationContext context: Context, audioAttributes: AudioAttributes) = SimpleExoPlayer.Builder(context).build().apply {
-        setAudioAttributes(audioAttributes, true)
-        setHandleAudioBecomingNoisy(true)
-    }
+    fun provideContentResolver(@ApplicationContext context: Context) = context.contentResolver
 
     @ServiceScoped
     @Provides

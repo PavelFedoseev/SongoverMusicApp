@@ -9,9 +9,10 @@ import com.google.android.exoplayer2.ControlDispatcher
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.project.songovermusicapp.exoplayer.source.FirebaseMusicSource
+import com.project.songovermusicapp.exoplayer.source.MediaSource
 
 class MusicPlaybackPreparer(
-    private val firebaseMusicSource: FirebaseMusicSource,
+    private val mediaSource: MediaSource,
     private val playerPrepared: (MediaMetadataCompat?) -> Unit //Функция после подготовки плеера
 ) : MediaSessionConnector.PlaybackPreparer {
     override fun onCommand(
@@ -30,8 +31,8 @@ class MusicPlaybackPreparer(
 
     //подготовка трека который выбрал пользователь
     override fun onPrepareFromMediaId(mediaId: String, playWhenReady: Boolean, extras: Bundle?) {
-        firebaseMusicSource.whenReady {
-            val itemToPlay = firebaseMusicSource.songs.find { mediaId == it.description.mediaId }
+        mediaSource.whenReady {
+            val itemToPlay = mediaSource.songs.find { mediaId == it.description.mediaId }
             playerPrepared(itemToPlay)
         }
     }

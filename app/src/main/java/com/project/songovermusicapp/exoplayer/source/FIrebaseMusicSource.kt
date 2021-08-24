@@ -18,7 +18,7 @@ import javax.inject.Inject
 class FirebaseMusicSource @Inject constructor(private val musicFirestoreDatabase: MusicFirestoreDatabase) :
     MediaSource {
 
-    var songs = emptyList<MediaMetadataCompat>()
+    override var songs = mutableListOf<MediaMetadataCompat>()
 
     private val onReadyListeners = mutableListOf<(Boolean) -> Unit>()
 
@@ -51,7 +51,7 @@ class FirebaseMusicSource @Inject constructor(private val musicFirestoreDatabase
                 .putString(METADATA_KEY_ALBUM_ART_URI, song.imageUrl)
                 .putString(METADATA_KEY_MEDIA_URI, song.songUrl)
                 .build()
-        }
+        }.toMutableList()
         state = STATE_INITIALIZED
     }
 

@@ -1,6 +1,6 @@
 package com.project.songovermusicapp.data.other
 
-data class Resource<out T>(val status: Status, val data: T?, val message: String?) {
+data class Resource<out T>(val status: Status, val data: T?, val message: String?, val source: Source = Source.NONE ) {
     companion object{
         fun <T> success(data: T?) = Resource(Status.SUCCESS, data, null)
 
@@ -14,4 +14,10 @@ enum class Status{
     SUCCESS,
     ERROR,
     LOADING
+}
+
+enum class Source{
+    NONE,
+    REMOTE,
+    LOCAL
 }

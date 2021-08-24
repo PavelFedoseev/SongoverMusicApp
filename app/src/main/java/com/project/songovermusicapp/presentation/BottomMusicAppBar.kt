@@ -25,6 +25,7 @@ import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
@@ -116,8 +117,10 @@ fun BottomBar(
                 state = pagerState,
                 modifier = pagerModifier.layoutId("pagerConstraint"),
             ) { page ->
-                val songPage = songItems[page]
-                PagerSongItem(song = songPage)
+                if(page < songItems.size) {
+                    val songPage = songItems[page]
+                    PagerSongItem(song = songPage)
+                }
             }
             Card(
                 modifier = Modifier
@@ -221,7 +224,7 @@ fun PagerSongItem(song: Song, gradientColor: Color? = null) {
         )
         Box(modifier = Modifier) {
             Column {
-                Text(text = song.title, fontSize = SongItemTextTitle)
+                Text(text = song.title, fontSize = SongItemTextTitle )
                 Text(text = song.subtitle, fontSize = SongItemTextSubtitle)
             }
         }

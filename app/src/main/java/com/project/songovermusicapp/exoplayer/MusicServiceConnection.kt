@@ -9,12 +9,19 @@ import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.google.android.exoplayer2.SimpleExoPlayer
 import com.project.songovermusicapp.R
+import com.project.songovermusicapp.data.constants.Constants.EXTERNAL_ERROR_EVENT
 import com.project.songovermusicapp.data.constants.Constants.NETWORK_ERROR_EVENT
 import com.project.songovermusicapp.data.other.Event
 import com.project.songovermusicapp.data.other.Resource
+import javax.inject.Inject
 
 class MusicServiceConnection(private val context: Context) {
+
+    @Inject
+    lateinit var exoPlayer: SimpleExoPlayer
+
     private val _isConnected = MutableLiveData<Event<Resource<Boolean>>>()
     val isConnected: LiveData<Event<Resource<Boolean>>> = _isConnected
 
@@ -48,10 +55,12 @@ class MusicServiceConnection(private val context: Context) {
     fun subscribe(parentId: String, callback: MediaBrowserCompat.SubscriptionCallback){
         mediaBrowser.subscribe(parentId, callback)
     }
+
     /** Отписка от объектов медиа по parentId*/
     fun unsubscribe(parentId: String, callback: MediaBrowserCompat.SubscriptionCallback){
         mediaBrowser.unsubscribe(parentId, callback)
     }
+
 
     private inner class MediaBrowserConnectionCallback(
         private val context: Context
@@ -85,6 +94,8 @@ class MusicServiceConnection(private val context: Context) {
                 )
             )
         }
+
+
     }
 
     private inner class MediaControllerCallback : MediaControllerCompat.Callback() {
@@ -101,6 +112,9 @@ class MusicServiceConnection(private val context: Context) {
             when (event) {
                 NETWORK_ERROR_EVENT -> _networkError.postValue(
                     Event(Resource.error(context.getString(R.string.message_network_error), null))
+                )
+                EXTERNAL_ERROR_EVENT -> _networkError.postValue(
+                    Event(Resource.error(context.getString(R.string.message_external_error), null))
                 )
             }
         }

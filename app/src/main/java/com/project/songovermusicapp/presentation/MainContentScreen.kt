@@ -1,6 +1,5 @@
 package com.project.songovermusicapp.presentation
 
-import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -20,14 +19,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
-import androidx.lifecycle.LiveData
 import androidx.navigation.NavController
 import com.google.accompanist.insets.statusBarsHeight
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.rememberPagerState
 import com.project.songovermusicapp.R
 import com.project.songovermusicapp.data.entities.Song
-import com.project.songovermusicapp.data.other.Resource
 import com.project.songovermusicapp.data.other.Status
 import com.project.songovermusicapp.exoplayer.toSong
 import com.project.songovermusicapp.presentation.musiclist.MusicList
@@ -35,6 +32,7 @@ import com.project.songovermusicapp.presentation.musiclist.OnItemClickListener
 import com.project.songovermusicapp.presentation.ui.theme.TabCategoryCollapsedSize
 import com.project.songovermusicapp.presentation.ui.theme.TabCategoryExpandedSize
 import com.project.songovermusicapp.presentation.ui.viewmodel.MainCategory
+import com.project.songovermusicapp.presentation.ui.viewmodel.MainViewModel
 import com.project.songovermusicapp.presentation.ui.viewmodel.SongItem
 import com.project.songovermusicapp.presentation.util.OnDominantColorListener
 
@@ -43,32 +41,29 @@ import com.project.songovermusicapp.presentation.util.OnDominantColorListener
 @Composable
 fun MainContent(
     modifier: Modifier = Modifier,
-    curPlayingSong: LiveData<MediaMetadataCompat?>,
-    playbackStateCompat: LiveData<PlaybackStateCompat?>,
     isRefreshing: Boolean = false,
     selectedMainCategory: MainCategory,
     mainCategories: List<MainCategory>,
     onCategorySelected: (MainCategory) -> Unit,
-    resource: LiveData<Resource<List<Song>>>,
     mediaListClickListener: OnItemClickListener,
     dominantColorListener: OnDominantColorListener,
     dominantColor: Color,
+    mainViewModel: MainViewModel,
     navController: NavController
 ) {
-    val playbackState by playbackStateCompat.observeAsState()
+    val playbackState by mainViewModel.playbackState.observeAsState()
 
-    val playingSong by curPlayingSong.observeAsState()
+    val playingSong by mainViewModel.curPlayingSong.observeAsState()
     var curPlayingSongItem by remember { mutableStateOf(SongItem.stopped()) }
 
-    val resourceState by resource.observeAsState()
+    val resourceResourceState by mainViewModel.resourceMediaItems.observeAsState()
     var songItems by remember { mutableStateOf(emptyList<Song>()) }
-//    val standartColor = MaterialTheme.colors.primary
-//    val dominantColor by remember { mutableStateOf(standartColor)}
-//
 
-    when (resourceState?.status) {
+    val curPlayingSource by mainViewModel.curPlayingSource.observeAsState()
+
+    when (resourceResourceState?.status) {
         Status.SUCCESS -> {
-            resourceState?.data?.let {
+            resourceResourceState?.data?.let {
                 songItems = it
             }
         }
@@ -80,8 +75,10 @@ fun MainContent(
 
         }
     }
+
+    val pageCount = songItems.size
     val pagerState = rememberPagerState(
-        pageCount = songItems.size,
+        pageCount = pageCount,
         initialOffscreenLimit = 2
     )
 
@@ -132,7 +129,14 @@ fun MainContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .layoutId("topAppBar")
-                .background(Brush.verticalGradient(listOf(dominantColor, dominantColor.copy(0.25f))))
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            dominantColor,
+                            dominantColor.copy(0.25f)
+                        )
+                    )
+                )
         ) {
             Spacer(
                 Modifier
@@ -148,7 +152,15 @@ fun MainContent(
         Column(modifier = Modifier.layoutId("mainContent")) {
             if (mainCategories.isNotEmpty()) {
                 MainCategoriesTabs(
-                    modifier = Modifier.background(Brush.verticalGradient(listOf(dominantColor.copy(0.25f), Color.Transparent))),
+                    modifier = Modifier.background(
+                        Brush.verticalGradient(
+                            listOf(
+                                dominantColor.copy(
+                                    0.25f
+                                ), Color.Transparent
+                            )
+                        )
+                    ),
                     categories = mainCategories,
                     selectedCategory = selectedMainCategory,
                     onCategorySelected = onCategorySelected
@@ -164,7 +176,11 @@ fun MainContent(
                     )
                 }
                 MainCategory.Local -> {
-
+                    MusicList(
+                        list = songItems,
+                        itemClickListener = mediaListClickListener,
+                        curPlayingSongItem = curPlayingSongItem
+                    )
                 }
             }
         }

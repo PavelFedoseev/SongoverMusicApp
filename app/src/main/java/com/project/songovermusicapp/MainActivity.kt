@@ -1,8 +1,14 @@
 package com.project.songovermusicapp
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
@@ -14,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.content.ContextCompat
 import androidx.navigation.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -34,10 +41,14 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private val mainViewModel: MainViewModel by viewModels()
+    private lateinit var permissionsLauncher: ActivityResultLauncher<Array<String>>
+    private var readPermissionGranted = false
+    private var writePermissionGranted = false
 
     @ExperimentalMaterialApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             val viewState by mainViewModel.state.collectAsState()
 
@@ -89,9 +100,7 @@ class MainActivity : ComponentActivity() {
                         composable("main_screen") {
                             navController.addOnDestinationChangedListener(destinationChangeListener)
                             MainContent(
-                                resource = mainViewModel.mediaItems,
-                                curPlayingSong = mainViewModel.curPlayingSong,
-                                playbackStateCompat = mainViewModel.playbackState,
+                                mainViewModel = mainViewModel,
                                 mediaListClickListener = mediaListClickListener,
                                 dominantColorListener = dominantColorListener,
                                 dominantColor = animateDominantColor,
@@ -113,11 +122,50 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+        permissionsLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            readPermissionGranted = permissions[Manifest.permission.READ_EXTERNAL_STORAGE] ?: readPermissionGranted
+            writePermissionGranted = permissions[Manifest.permission.WRITE_EXTERNAL_STORAGE] ?: writePermissionGranted
+
+            if(readPermissionGranted) {
+//                loadPhotosFromExternalStorageIntoRecyclerView()
+            } else {
+                Toast.makeText(this, "Can't read files without permission.", Toast.LENGTH_LONG).show()
+            }
+        }
+        updateOrRequestPermissions()
     }
 
     override fun onDestroy() {
         viewModelStore.clear()
         super.onDestroy()
+    }
+
+
+
+    private fun updateOrRequestPermissions() {
+        val hasReadPermission = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        ) == PackageManager.PERMISSION_GRANTED
+        val hasWritePermission = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        ) == PackageManager.PERMISSION_GRANTED
+        val minSdk29 = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+
+        readPermissionGranted = hasReadPermission
+        writePermissionGranted = hasWritePermission || minSdk29
+
+        val permissionsToRequest = mutableListOf<String>()
+        if(!writePermissionGranted) {
+            permissionsToRequest.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        }
+        if(!readPermissionGranted) {
+            permissionsToRequest.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+        }
+        if(permissionsToRequest.isNotEmpty()) {
+            permissionsLauncher.launch(permissionsToRequest.toTypedArray())
+        }
     }
 }
 
