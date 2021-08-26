@@ -1,5 +1,7 @@
 package com.project.songovermusicapp.presentation
 
+import android.support.v4.media.MediaMetadataCompat
+import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -10,7 +12,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -22,17 +23,17 @@ import androidx.constraintlayout.compose.Dimension
 import androidx.navigation.NavController
 import com.google.accompanist.insets.statusBarsHeight
 import com.google.accompanist.pager.ExperimentalPagerApi
-import com.google.accompanist.pager.rememberPagerState
 import com.project.songovermusicapp.R
 import com.project.songovermusicapp.data.entities.Song
+import com.project.songovermusicapp.data.other.Resource
 import com.project.songovermusicapp.data.other.Status
+import com.project.songovermusicapp.exoplayer.extensions.toSong
 import com.project.songovermusicapp.exoplayer.toSong
 import com.project.songovermusicapp.presentation.musiclist.MusicList
 import com.project.songovermusicapp.presentation.musiclist.OnItemClickListener
 import com.project.songovermusicapp.presentation.ui.theme.TabCategoryCollapsedSize
 import com.project.songovermusicapp.presentation.ui.theme.TabCategoryExpandedSize
 import com.project.songovermusicapp.presentation.ui.viewmodel.MainCategory
-import com.project.songovermusicapp.presentation.ui.viewmodel.MainViewModel
 import com.project.songovermusicapp.presentation.ui.viewmodel.SongItem
 import com.project.songovermusicapp.presentation.util.OnDominantColorListener
 
@@ -48,22 +49,28 @@ fun MainContent(
     mediaListClickListener: OnItemClickListener,
     dominantColorListener: OnDominantColorListener,
     dominantColor: Color,
-    mainViewModel: MainViewModel,
-    navController: NavController
+    navController: NavController,
+    curPlayingSong: MediaMetadataCompat?,
+    playbackState: PlaybackStateCompat?,
+    resourceMediaItems: Resource<List<Song>>?,
+    curSongQueue: MutableList<MediaSessionCompat.QueueItem>?
 ) {
-    val playbackState by mainViewModel.playbackState.observeAsState()
 
-    val playingSong by mainViewModel.curPlayingSong.observeAsState()
+    val isShuffle by remember { mutableStateOf(false) }
+
     var curPlayingSongItem by remember { mutableStateOf(SongItem.stopped()) }
 
-    val resourceResourceState by mainViewModel.resourceMediaItems.observeAsState()
     var songItems by remember { mutableStateOf(emptyList<Song>()) }
 
-    val curPlayingSource by mainViewModel.curPlayingSource.observeAsState()
+    var queueItems by remember { mutableStateOf(emptyList<Song>()) }
 
-    when (resourceResourceState?.status) {
+    queueItems = curSongQueue?.let{
+        it.mapNotNull{item -> item.toSong()}
+    }?: emptyList()
+
+    when (resourceMediaItems?.status) {
         Status.SUCCESS -> {
-            resourceResourceState?.data?.let {
+            resourceMediaItems.data?.let {
                 songItems = it
             }
         }
@@ -76,13 +83,8 @@ fun MainContent(
         }
     }
 
-    val pageCount = songItems.size
-    val pagerState = rememberPagerState(
-        pageCount = pageCount,
-        initialOffscreenLimit = 2
-    )
 
-    playingSong?.toSong()?.let {
+    curPlayingSong?.toSong()?.let {
         when (playbackState?.state) {
             PlaybackStateCompat.STATE_PAUSED -> {
                 curPlayingSongItem = SongItem.paused(it)
@@ -187,8 +189,7 @@ fun MainContent(
         Column(modifier = Modifier.layoutId("bottomMusicBar")) {
             BottomBar(
                 curSongItem = curPlayingSongItem,
-                pagerState = pagerState,
-                songItems = songItems,
+                songItems = if(isShuffle) queueItems else songItems,
                 modifier = Modifier,
                 onItemClickListener = mediaListClickListener,
                 dominantColorListener = dominantColorListener,

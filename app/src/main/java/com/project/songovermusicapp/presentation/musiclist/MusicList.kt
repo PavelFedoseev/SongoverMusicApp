@@ -47,7 +47,7 @@ fun MusicList(
             var songState = SongState.STOPPED
             if(curPlayingSongItem?.song?.mediaId == song.mediaId)
                 songState = curPlayingSongItem.songState
-            SongItem(song = song, itemClickListener, songState)
+            SongItem(song = song, songPosition = list.indexOf(song), itemClickListener, songState)
         })
     }
 }
@@ -58,7 +58,7 @@ fun MusicProgressBar() {
 }
 
 @Composable
-fun SongItem(song: Song, itemClickListener: OnItemClickListener, songState : SongState = SongState.STOPPED) {
+fun SongItem(song: Song, songPosition: Int, itemClickListener: OnItemClickListener, songState : SongState = SongState.STOPPED) {
 
 
     val defaultDominantColor = MaterialTheme.colors.surface
@@ -67,7 +67,7 @@ fun SongItem(song: Song, itemClickListener: OnItemClickListener, songState : Son
     }
     val itemColor by animateColorAsState(targetValue = dominantColor)
     Box(modifier = Modifier.clickable {
-        itemClickListener.onItemClickPlay(song)
+        itemClickListener.onItemClickPlay(song, songPosition)
     }) {
         Box(
             modifier = Modifier
@@ -167,7 +167,7 @@ fun SongItem(song: Song, itemClickListener: OnItemClickListener, songState : Son
 }
 
 interface OnItemClickListener {
-    fun onItemClickPlay(song: Song)
+    fun onItemClickPlay(song: Song, position: Int = -1)
     fun onItemClickNext()
     fun onItemClickPrevious()
 }

@@ -11,6 +11,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
+import kotlinx.coroutines.flow.collect
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
@@ -29,10 +30,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
+import androidx.constraintlayout.compose.Dimension
 import androidx.navigation.NavController
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
-import com.google.accompanist.pager.PagerState
+import com.google.accompanist.pager.rememberPagerState
 import com.project.songovermusicapp.R
 import com.project.songovermusicapp.data.entities.Song
 import com.project.songovermusicapp.presentation.musiclist.OnItemClickListener
@@ -51,13 +53,28 @@ fun BottomBar(
     modifier: Modifier = Modifier,
     pagerModifier: Modifier = Modifier,
     curSongItem: SongItem?,
-    pagerState: PagerState,
     songItems: List<Song>,
     onItemClickListener: OnItemClickListener,
     dominantColorListener: OnDominantColorListener,
     navController: NavController
 ) {
 
+    val pagerState = rememberPagerState(
+        pageCount = songItems.size,
+        initialOffscreenLimit = 2
+    )
+
+    var currentPage by remember {
+        mutableStateOf(0)
+    }
+
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.currentPage }.collect{
+                page ->
+            if(page + 1 == currentPage || page - 1 == currentPage)
+            onItemClickListener.onItemClickPlay(songItems[page])
+        }
+    }
     var dominantColor by remember { mutableStateOf(Color.Transparent) }
     val animateDominantColor by animateColorAsState(targetValue = dominantColor)
 
@@ -93,7 +110,7 @@ fun BottomBar(
         }
         ConstraintLayout(constraintSet = constraintSet, modifier = Modifier
             .fillMaxSize()
-            .padding( horizontal = BottomBarPadding)
+            .padding(horizontal = BottomBarPadding)
             .clickable {
                 navController.navigate("music_item_screen")
             }) {
@@ -104,23 +121,27 @@ fun BottomBar(
                         it.mediaId == curSongItem?.song?.mediaId
                     }
                     if(songItem != null && songItems.indexOf(songItem)!= -1)
+                        currentPage = songItems.indexOf(songItem)
+
                     pagerState.animateScrollToPage(
-                        songItems.indexOf(songItem), initialVelocity = 0.5f,
+                        currentPage, initialVelocity = 0.5f,
                         animationSpec = tween(
                             durationMillis = 700,
                             easing = FastOutSlowInEasing
                         )
                     )
+                    pagerState.scroll {  }
                 }
             }
             HorizontalPager(
                 state = pagerState,
-                modifier = pagerModifier.layoutId("pagerConstraint"),
+                modifier = pagerModifier.layoutId("pagerConstraint")
             ) { page ->
                 if(page < songItems.size) {
                     val songPage = songItems[page]
                     PagerSongItem(song = songPage)
                 }
+
             }
             Card(
                 modifier = Modifier
@@ -212,21 +233,50 @@ fun BottomBar(
 
 @Composable
 fun PagerSongItem(song: Song, gradientColor: Color? = null) {
-    Row(
+    val constraintSet = ConstraintSet(){
+        val startSpacer = createRefFor("startSpacer")
+        val textBox = createRefFor("textBox")
+        val endSpacer = createRefFor("endSpacer")
+        constrain(startSpacer){
+            top.linkTo(parent.top)
+            bottom.linkTo(parent.bottom)
+            start.linkTo(parent.start)
+        }
+        constrain(textBox){
+            top.linkTo(parent.top)
+            start.linkTo(startSpacer.end)
+            end.linkTo(endSpacer.start)
+            width = Dimension.fillToConstraints
+        }
+        constrain(endSpacer){
+            top.linkTo(parent.top)
+            bottom.linkTo(parent.bottom)
+            end.linkTo(parent.end)
+        }
+    }
+    ConstraintLayout(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = BottomBarPadding)
+            .padding(top = BottomBarPadding),
+        constraintSet = constraintSet
     ) {
         Spacer(
             modifier = Modifier
                 .fillMaxHeight()
                 .width(BottomBarItemSpacer)
+                .layoutId("startSpacer")
         )
-        Box(modifier = Modifier) {
+        Box(modifier = Modifier.layoutId("textBox")) {
             Column {
-                Text(text = song.title, fontSize = SongItemTextTitle )
-                Text(text = song.subtitle, fontSize = SongItemTextSubtitle)
+                Text(text = song.title, fontSize = SongItemTextTitle, maxLines = 1, overflow = TextOverflow.Ellipsis )
+                Text(text = song.subtitle, fontSize = SongItemTextSubtitle, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
+        Spacer(
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(BottomBarItemSpacer)
+                .layoutId("endSpacer")
+        )
     }
 }

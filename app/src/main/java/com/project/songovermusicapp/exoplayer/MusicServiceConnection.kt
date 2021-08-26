@@ -6,19 +6,25 @@ import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
+import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.project.songovermusicapp.R
+import com.project.songovermusicapp.data.constants.Constants.CUSTOM_ACTION_PREPARE
 import com.project.songovermusicapp.data.constants.Constants.EXTERNAL_ERROR_EVENT
 import com.project.songovermusicapp.data.constants.Constants.NETWORK_ERROR_EVENT
 import com.project.songovermusicapp.data.other.Event
 import com.project.songovermusicapp.data.other.Resource
+import timber.log.Timber
 import javax.inject.Inject
 
 class MusicServiceConnection(private val context: Context) {
 
+    companion object{
+        private const val TAG = "MusicServiceConnection"
+    }
     @Inject
     lateinit var exoPlayer: SimpleExoPlayer
 
@@ -36,6 +42,10 @@ class MusicServiceConnection(private val context: Context) {
 
     private val mediaBrowserConnectionCallback = MediaBrowserConnectionCallback(context)
 
+    private val _curQueue =
+        MutableLiveData(emptyList<MediaSessionCompat.QueueItem>().toMutableList())
+    val curQueue: LiveData<MutableList<MediaSessionCompat.QueueItem>> = _curQueue
+
     private val mediaBrowser = MediaBrowserCompat(
         context,
         ComponentName(context, MusicService::class.java),
@@ -52,13 +62,17 @@ class MusicServiceConnection(private val context: Context) {
         get() = mediaController.transportControls
 
     /** Подписка на получение объектов медиа по определённому parentId*/
-    fun subscribe(parentId: String, callback: MediaBrowserCompat.SubscriptionCallback){
+    fun subscribe(parentId: String, callback: MediaBrowserCompat.SubscriptionCallback) {
         mediaBrowser.subscribe(parentId, callback)
     }
 
     /** Отписка от объектов медиа по parentId*/
-    fun unsubscribe(parentId: String, callback: MediaBrowserCompat.SubscriptionCallback){
+    fun unsubscribe(parentId: String, callback: MediaBrowserCompat.SubscriptionCallback) {
         mediaBrowser.unsubscribe(parentId, callback)
+    }
+
+    fun preparePlayer(position: Int = 0){
+
     }
 
 
@@ -117,6 +131,10 @@ class MusicServiceConnection(private val context: Context) {
                     Event(Resource.error(context.getString(R.string.message_external_error), null))
                 )
             }
+        }
+
+        override fun onQueueChanged(queue: MutableList<MediaSessionCompat.QueueItem>?) {
+            _curQueue.postValue(queue)
         }
 
         override fun onSessionDestroyed() {

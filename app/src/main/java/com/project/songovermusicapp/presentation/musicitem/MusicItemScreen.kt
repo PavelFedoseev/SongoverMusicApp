@@ -2,6 +2,7 @@ package com.project.songovermusicapp.presentation.musicitem
 
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
+import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -12,7 +13,6 @@ import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -24,6 +24,7 @@ import androidx.compose.ui.layout.layoutId
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
@@ -33,8 +34,8 @@ import com.project.songovermusicapp.R
 import com.project.songovermusicapp.data.entities.Song
 import com.project.songovermusicapp.exoplayer.toSong
 import com.project.songovermusicapp.presentation.MusicSeekBar
+import com.project.songovermusicapp.presentation.OnPlayerController
 import com.project.songovermusicapp.presentation.ui.theme.*
-import com.project.songovermusicapp.presentation.ui.viewmodel.MainViewModel
 import com.project.songovermusicapp.presentation.ui.viewmodel.SongItem
 import com.project.songovermusicapp.presentation.ui.viewmodel.SongState
 import com.project.songovermusicapp.presentation.util.OnDominantColorListener
@@ -45,21 +46,19 @@ import com.skydoves.landscapist.glide.GlideImage
 @ExperimentalMaterialApi
 @Composable
 fun MusicItemScreen(
-    viewModel: MainViewModel,
     dominantColorListener: OnDominantColorListener,
-    dominantColor: Color
+    dominantColor: Color,
+    curPlayingSong: MediaMetadataCompat?,
+    playbackState: PlaybackStateCompat?,
+    curSongPosition: Long?,
+    curSongDuration: Long?,
+    controller: OnPlayerController
 ) {
-    val curPlayingSong by viewModel.curPlayingSong.observeAsState()
-    val playbackState by viewModel.playbackState.observeAsState()
-
-    val curSongPosition by viewModel.curPlayerPosition.observeAsState()
-    val curSongDuration by viewModel.curSongDuration.observeAsState()
 
     var songItem by remember { mutableStateOf(SongItem.stopped()) }
 
-
     curPlayingSong?.toSong()?.let {
-        viewModel.playOrToggleSong(it, prepare = true)
+        controller.toggleMusic(it, prepare = true)
         when (playbackState?.state) {
             PlaybackStateCompat.STATE_PAUSED -> {
                 songItem = SongItem.paused(it)
@@ -142,23 +141,7 @@ fun MusicItemScreen(
             MusicItemPlayerController(
                 songItem = songItem,
                 playbackState = playbackState,
-                listener = object : OnPlayerController {
-                    override fun skipToPrevious() {
-                        viewModel.skipToPreviousSong()
-                    }
-
-                    override fun toggleMusic() {
-                        songItem.song?.let { viewModel.playOrToggleSong(it, true) }
-                    }
-
-                    override fun skipToNext() {
-                        viewModel.skipToNextSong()
-                    }
-
-                    override fun seekTo(position: Long) {
-                        viewModel.seekTo(position)
-                    }
-                },
+                listener = controller,
                 curSongPosition = curSongPosition ?: 0L,
                 curSongDuration = curSongDuration ?: 0L
             )
@@ -257,9 +240,9 @@ private fun MusicItemText(song: Song) {
             )
             .fillMaxWidth()
     ) {
-        Text(text = song.title, fontSize = MusicItemScreenTitle)
+        Text(text = song.title, fontSize = MusicItemScreenTitle, maxLines = 3, overflow = TextOverflow.Ellipsis)
         Text(
-            text = song.subtitle, fontSize = MusicItemScreenSubtitle, modifier = Modifier.padding(
+            text = song.subtitle, fontSize = MusicItemScreenSubtitle, maxLines = 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(
                 vertical = MusicItemScreenPadding
             )
         )
@@ -282,8 +265,14 @@ private fun MusicItemPlayerController(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        MusicSeekBar(timePosition = curSongPosition, duration = curSongDuration, modifier = Modifier.height(45.dp).padding(bottom = MusicItemScreenPadding)) { position ->
-                listener.seekTo(position)
+        MusicSeekBar(
+            timePosition = curSongPosition,
+            duration = curSongDuration,
+            modifier = Modifier
+                .height(45.dp)
+                .padding(bottom = MusicItemScreenPadding)
+        ) { position ->
+            listener.seekTo(position)
         }
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -325,7 +314,7 @@ private fun MusicItemPlayerController(
                     .width(MusicItemScreenControllerBtnHeight)
                     .height(MusicItemScreenControllerBtnHeight),
                 shape = RoundedCornerShape(BottomBarPlayerRoundness),
-                onClick = { listener.toggleMusic() }
+                onClick = { songItem.song?.let { listener.toggleMusic(songItem.song, true) } }
             ) {
                 Image(
                     painter = painter,
@@ -359,12 +348,4 @@ private fun MusicItemPlayerController(
             }
         }
     }
-}
-
-
-interface OnPlayerController {
-    fun skipToPrevious()
-    fun toggleMusic()
-    fun skipToNext()
-    fun seekTo(position: Long)
 }

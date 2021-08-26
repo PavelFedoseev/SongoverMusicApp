@@ -13,5 +13,7 @@ object Constants {
     const val NETWORK_ERROR_EVENT = "Network Error"
     const val EXTERNAL_ERROR_EVENT = "External Error"
 
+    const val CUSTOM_ACTION_PREPARE = "action prepare"
+
     const val UPDATE_PLAYER_POSITION_INTERVAL = 100L
 }

@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.project.songovermusicapp.START_CATEGORY
+import com.project.songovermusicapp.START_SOURCE
 import com.project.songovermusicapp.data.constants.Constants
 import com.project.songovermusicapp.data.constants.Constants.MEDIA_FIREBASE_ID
 import com.project.songovermusicapp.data.constants.Constants.MEDIA_LOCAL_ID
@@ -21,11 +22,7 @@ import com.project.songovermusicapp.exoplayer.extensions.isPlaying
 import com.project.songovermusicapp.exoplayer.extensions.isPrepared
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -34,7 +31,7 @@ class MainViewModel @Inject constructor(
     private val musicServiceConnection: MusicServiceConnection
 ) : ViewModel() {
     // Выбранная категория
-    private val selectedCategory = MutableStateFlow(START_CATEGORY)
+    private val selectedCategory = MutableStateFlow(MainCategory.Local)
 
     // Доступные категории
     private val categories = MutableStateFlow(MainCategory.values().asList())
@@ -59,10 +56,12 @@ class MainViewModel @Inject constructor(
     private val _curPlayingSource = MutableLiveData<Source>()
     val curPlayingSource: LiveData<Source> = _curPlayingSource
 
+
     val isConnected = musicServiceConnection.isConnected
     val networkError = musicServiceConnection.networkError
     val curPlayingSong = musicServiceConnection.currentlyPlayingSong
     val playbackState = musicServiceConnection.playbackState
+    val curQueue = musicServiceConnection.curQueue
 
     init {
         viewModelScope.launch {
@@ -85,9 +84,10 @@ class MainViewModel @Inject constructor(
                 _state.value = it
             }
         }
-        _resourceMediaItems.postValue(Resource.loading(null))
-        subscribeToSource(MEDIA_LOCAL_ID)
-        updateCurrentPlayerPosition()
+            _resourceMediaItems.value = Resource.loading(null)
+            subscribeToSource(START_SOURCE)
+            updateCurrentPlayerPosition()
+            onMainCategorySelected(category = START_CATEGORY)
     }
 
     /** Функция перехода к следующему треку */
@@ -122,7 +122,11 @@ class MainViewModel @Inject constructor(
 
     }
 
-    fun onItemSongSelected(mediaItem: Song, toggle: Boolean) {
+    /** Выбран трек из списка или из нижней панели*/
+    fun onItemSongSelected(mediaItem: Song, toggle: Boolean, position: Int) {
+//        if(position!=-1){
+//            musicServiceConnection.preparePlayer(position)
+//        }
         playOrToggleSong(mediaItem, toggle)
     }
 
@@ -162,13 +166,9 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private fun unsubscribeFromSources() {
-        unsubscribeFromSource(MEDIA_FIREBASE_ID)
-        unsubscribeFromSource(MEDIA_FIREBASE_ID)
-    }
 
     private fun subscribeToSource(parentId: String) {
-        unsubscribeFromSources()
+        //unsubscribeFromSources()
         musicServiceConnection.subscribe(
             parentId,
             object : MediaBrowserCompat.SubscriptionCallback() {

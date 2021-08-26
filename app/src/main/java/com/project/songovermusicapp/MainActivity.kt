@@ -17,6 +17,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -28,6 +29,7 @@ import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.project.songovermusicapp.data.entities.Song
 import com.project.songovermusicapp.presentation.MainContent
+import com.project.songovermusicapp.presentation.OnPlayerController
 import com.project.songovermusicapp.presentation.musicitem.MusicItemScreen
 import com.project.songovermusicapp.presentation.musiclist.OnItemClickListener
 import com.project.songovermusicapp.presentation.splash.SplashScreen
@@ -40,7 +42,7 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    private val mainViewModel: MainViewModel by viewModels()
+    private val mainViewModel : MainViewModel by viewModels()
     private lateinit var permissionsLauncher: ActivityResultLauncher<Array<String>>
     private var readPermissionGranted = false
     private var writePermissionGranted = false
@@ -50,8 +52,33 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            val viewState by mainViewModel.state.collectAsState()
 
+            val viewState by mainViewModel.state.collectAsState()
+            val curPlayingSong by mainViewModel.curPlayingSong.observeAsState()
+            //val curPlayingSource by mainViewModel.curPlayingSource.observeAsState()
+            val playbackState by mainViewModel.playbackState.observeAsState()
+            val curSongPosition by mainViewModel.curPlayerPosition.observeAsState()
+            val curSongDuration by mainViewModel.curSongDuration.observeAsState()
+            val resourceResourceState by mainViewModel.resourceMediaItems.observeAsState()
+            val curSongQueue by mainViewModel.curQueue.observeAsState()
+
+            val controller = object: OnPlayerController{
+                override fun skipToPrevious() {
+                    mainViewModel.skipToPreviousSong()
+                }
+
+                override fun toggleMusic(mediaItem: Song, toggle: Boolean, prepare: Boolean) {
+                    mainViewModel.playOrToggleSong(mediaItem, toggle, prepare)
+                }
+
+                override fun skipToNext() {
+                    mainViewModel.skipToNextSong()
+                }
+
+                override fun seekTo(position: Long) {
+                    mainViewModel.seekTo(position)
+                }
+            }
             val surfaceColor = MaterialTheme.colors.onSurface
             var dominantColor by remember { mutableStateOf(surfaceColor) }
 
@@ -66,8 +93,8 @@ class MainActivity : ComponentActivity() {
             }
 
             val mediaListClickListener = object : OnItemClickListener {
-                override fun onItemClickPlay(song: Song) {
-                    mainViewModel.onItemSongSelected(song, true)
+                override fun onItemClickPlay(song: Song, position: Int) {
+                    mainViewModel.onItemSongSelected(song, true, position)
                 }
 
                 override fun onItemClickNext() {
@@ -100,7 +127,6 @@ class MainActivity : ComponentActivity() {
                         composable("main_screen") {
                             navController.addOnDestinationChangedListener(destinationChangeListener)
                             MainContent(
-                                mainViewModel = mainViewModel,
                                 mediaListClickListener = mediaListClickListener,
                                 dominantColorListener = dominantColorListener,
                                 dominantColor = animateDominantColor,
@@ -108,14 +134,22 @@ class MainActivity : ComponentActivity() {
                                 selectedMainCategory = viewState.selectedCategory,
                                 onCategorySelected = mainViewModel::onMainCategorySelected,
                                 modifier = Modifier.fillMaxSize(),
-                                navController = navController
+                                navController = navController,
+                                curPlayingSong = curPlayingSong,
+                                playbackState = playbackState,
+                                resourceMediaItems = resourceResourceState,
+                                curSongQueue = curSongQueue
                             )
                         }
                         composable("music_item_screen") {
                             MusicItemScreen(
-                                viewModel = mainViewModel,
                                 dominantColorListener = dominantColorListener,
-                                dominantColor = animateDominantColor
+                                dominantColor = animateDominantColor,
+                                curPlayingSong = curPlayingSong,
+                                playbackState = playbackState,
+                                curSongPosition = curSongPosition,
+                                curSongDuration = curSongDuration,
+                                controller = controller
                             )
                         }
                     }
@@ -133,11 +167,6 @@ class MainActivity : ComponentActivity() {
             }
         }
         updateOrRequestPermissions()
-    }
-
-    override fun onDestroy() {
-        viewModelStore.clear()
-        super.onDestroy()
     }
 
 
