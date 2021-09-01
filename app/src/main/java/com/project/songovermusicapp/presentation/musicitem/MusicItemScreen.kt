@@ -1,5 +1,6 @@
 package com.project.songovermusicapp.presentation.musicitem
 
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.support.v4.media.MediaMetadataCompat
@@ -52,7 +53,10 @@ fun MusicItemScreen(
     playbackState: PlaybackStateCompat?,
     curSongPosition: Long?,
     curSongDuration: Long?,
-    controller: OnPlayerController
+    controller: OnPlayerController,
+    isShuffle: Boolean,
+    isRepeat: Boolean,
+    orientation: Int
 ) {
 
     var songItem by remember { mutableStateOf(SongItem.stopped()) }
@@ -79,34 +83,69 @@ fun MusicItemScreen(
         val musicControlPanel = createRefFor("song_control_panel")
         val musicBottomBar = createRefFor("song_bottom_bar")
 
-        constrain(musicTopBar) {
-            start.linkTo(parent.start)
-            end.linkTo(parent.end)
-            top.linkTo(parent.top)
-        }
-        constrain(musicAlbumImage) {
-            start.linkTo(parent.start)
-            end.linkTo(parent.end)
-            top.linkTo(musicTopBar.bottom)
-            bottom.linkTo(musicTextInfo.top)
-            height = Dimension.fillToConstraints
-        }
-        constrain(musicTextInfo) {
-            start.linkTo(parent.start)
-            end.linkTo(parent.end)
-            bottom.linkTo(musicControlPanel.top)
-        }
-        constrain(musicControlPanel) {
-            start.linkTo(parent.start)
-            end.linkTo(parent.end)
-            bottom.linkTo(musicBottomBar.top)
+        when (orientation) {
+            Configuration.ORIENTATION_LANDSCAPE -> {
+                constrain(musicTopBar) {
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                    top.linkTo(parent.top)
+                }
+                constrain(musicAlbumImage) {
+                    start.linkTo(parent.start)
+                    top.linkTo(musicTopBar.bottom)
+                    bottom.linkTo(parent.bottom)
+                    height = Dimension.fillToConstraints
+                }
+                constrain(musicTextInfo) {
+                    top.linkTo(musicTopBar.bottom)
+                    start.linkTo(musicAlbumImage.end)
+                    end.linkTo(parent.end)
+                    bottom.linkTo(musicControlPanel.top)
+                }
+                constrain(musicControlPanel) {
+                    start.linkTo(musicAlbumImage.end)
+                    end.linkTo(parent.end)
+                    bottom.linkTo(musicBottomBar.top)
 
+                }
+                constrain(musicBottomBar) {
+                    start.linkTo(musicAlbumImage.end)
+                    end.linkTo(parent.end)
+                    bottom.linkTo(parent.bottom)
+                }
+            }
+            else -> {
+                constrain(musicTopBar) {
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                    top.linkTo(parent.top)
+                }
+                constrain(musicAlbumImage) {
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                    top.linkTo(musicTopBar.bottom)
+                    bottom.linkTo(musicTextInfo.top)
+                    height = Dimension.preferredWrapContent
+                }
+                constrain(musicTextInfo) {
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                    bottom.linkTo(musicControlPanel.top)
+                }
+                constrain(musicControlPanel) {
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                    bottom.linkTo(musicBottomBar.top)
+
+                }
+                constrain(musicBottomBar) {
+                    start.linkTo(parent.start)
+                    end.linkTo(parent.end)
+                    bottom.linkTo(parent.bottom)
+                }
+            }
         }
-        constrain(musicBottomBar) {
-            start.linkTo(parent.start)
-            end.linkTo(parent.end)
-            bottom.linkTo(parent.bottom)
-        }
+
 
     }
     ConstraintLayout(
@@ -143,7 +182,9 @@ fun MusicItemScreen(
                 playbackState = playbackState,
                 listener = controller,
                 curSongPosition = curSongPosition ?: 0L,
-                curSongDuration = curSongDuration ?: 0L
+                curSongDuration = curSongDuration ?: 0L,
+                isShuffle = isShuffle,
+                isRepeat = isRepeat
             )
         }
         Box(modifier = Modifier.layoutId("song_bottom_bar")) {
@@ -240,9 +281,18 @@ private fun MusicItemText(song: Song) {
             )
             .fillMaxWidth()
     ) {
-        Text(text = song.title, fontSize = MusicItemScreenTitle, maxLines = 3, overflow = TextOverflow.Ellipsis)
         Text(
-            text = song.subtitle, fontSize = MusicItemScreenSubtitle, maxLines = 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(
+            text = song.title,
+            fontSize = MusicItemScreenTitle,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            text = song.subtitle,
+            fontSize = MusicItemScreenSubtitle,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(
                 vertical = MusicItemScreenPadding
             )
         )
@@ -256,13 +306,14 @@ private fun MusicItemPlayerController(
     playbackState: PlaybackStateCompat?,
     listener: OnPlayerController,
     curSongPosition: Long,
-    curSongDuration: Long
+    curSongDuration: Long,
+    isShuffle: Boolean,
+    isRepeat: Boolean
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = MusicItemScreenPadding),
-        verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         MusicSeekBar(
@@ -274,17 +325,84 @@ private fun MusicItemPlayerController(
         ) { position ->
             listener.seekTo(position)
         }
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-        ) {
+        val constraintSet = ConstraintSet {
+            val shuffleCon = createRefFor("shuffleCon")
+            val previousCon = createRefFor("previousCon")
+            val playCon = createRefFor("playCon")
+            val nextCon = createRefFor("nextCon")
+            val repeatCon = createRefFor("repeatCon")
+
+            constrain(shuffleCon) {
+                top.linkTo(parent.top)
+                bottom.linkTo(parent.bottom)
+                end.linkTo(previousCon.start)
+                width =
+                    Dimension.value(
+                        MusicItemScreenControllerBtnHeight
+                                + MusicItemScreenPadding +
+                                MusicItemScreenPadding
+                    )
+            }
+            constrain(previousCon) {
+                top.linkTo(parent.top)
+                bottom.linkTo(parent.bottom)
+                end.linkTo(playCon.start)
+                width =
+                    Dimension.value(
+                        MusicItemScreenControllerBtnHeight
+                                + MusicItemScreenPadding +
+                                MusicItemScreenPadding
+                    )
+            }
+
+            constrain(playCon) {
+                top.linkTo(parent.top)
+                bottom.linkTo(parent.bottom)
+                start.linkTo(parent.start)
+                end.linkTo(parent.end)
+                width = Dimension.wrapContent
+            }
+            constrain(nextCon) {
+                top.linkTo(parent.top)
+                bottom.linkTo(parent.bottom)
+                start.linkTo(playCon.end)
+                width = Dimension.value(
+                    MusicItemScreenControllerBtnHeight
+                            + MusicItemScreenPadding +
+                            MusicItemScreenPadding
+                )
+            }
+            constrain(repeatCon) {
+                top.linkTo(parent.top)
+                bottom.linkTo(parent.bottom)
+                start.linkTo(nextCon.end)
+                width = Dimension.value(
+                    MusicItemScreenControllerBtnHeight
+                            + MusicItemScreenPadding +
+                            MusicItemScreenPadding
+                )
+            }
+        }
+        ConstraintLayout(modifier = Modifier.fillMaxWidth(), constraintSet = constraintSet) {
+            Card(modifier = Modifier.layoutId("shuffleCon")
+                .padding(horizontal = MusicItemScreenPadding),
+                onClick = {listener.toggleShuffle()}) {
+                Image(
+                    painter = if (isShuffle) painterResource(id = R.drawable.exo_icon_shuffle_on) else painterResource(
+                        id = R.drawable.exo_icon_shuffle_off
+                    ),
+                    contentDescription = stringResource(
+                        id = R.string.cd_shuffle
+                    )
+                )
+            }
+
             Card(
                 modifier = Modifier
-                    .padding(end = MusicItemScreenPaddingEnd)
+                    .layoutId("previousCon")
                     .width(MusicItemScreenControllerBtnHeight)
-                    .height(MusicItemScreenControllerBtnHeight),
+                    .height(MusicItemScreenControllerBtnHeight)
+                    .padding(horizontal = MusicItemScreenPadding),
                 shape = RoundedCornerShape(BottomBarPlayerRoundness),
                 onClick = { listener.skipToPrevious() }
             ) {
@@ -309,8 +427,10 @@ private fun MusicItemPlayerController(
                     painterResource(id = R.drawable.ic_play)
                 }
             }
+
             Card(
                 modifier = Modifier
+                    .layoutId("playCon")
                     .width(MusicItemScreenControllerBtnHeight)
                     .height(MusicItemScreenControllerBtnHeight),
                 shape = RoundedCornerShape(BottomBarPlayerRoundness),
@@ -329,9 +449,10 @@ private fun MusicItemPlayerController(
             }
             Card(
                 modifier = Modifier
-                    .padding(start = MusicItemScreenPaddingStart)
+                    .layoutId("nextCon")
                     .width(MusicItemScreenControllerBtnHeight)
-                    .height(MusicItemScreenControllerBtnHeight),
+                    .height(MusicItemScreenControllerBtnHeight)
+                    .padding(horizontal = MusicItemScreenPadding),
                 shape = RoundedCornerShape(BottomBarPlayerRoundness),
                 onClick = { listener.skipToNext() }
             ) {
@@ -343,6 +464,18 @@ private fun MusicItemPlayerController(
                         .padding(MusicItemScreenControllerBtnPadding),
                     contentDescription = stringResource(
                         id = R.string.cd_next
+                    )
+                )
+            }
+            Card(modifier = Modifier.layoutId("repeatCon")
+                .padding(horizontal = MusicItemScreenPadding),
+                onClick = {listener.toggleRepeat()}) {
+                Image(
+                    painter = if (isRepeat){ painterResource(id = R.drawable.exo_icon_repeat_one)} else{ painterResource(
+                        id = R.drawable.exo_icon_repeat_off
+                    )},
+                    contentDescription = stringResource(
+                        id = R.string.cd_shuffle
                     )
                 )
             }

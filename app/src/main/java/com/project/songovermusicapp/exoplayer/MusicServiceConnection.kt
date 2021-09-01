@@ -25,8 +25,6 @@ class MusicServiceConnection(private val context: Context) {
     companion object{
         private const val TAG = "MusicServiceConnection"
     }
-    @Inject
-    lateinit var exoPlayer: SimpleExoPlayer
 
     private val _isConnected = MutableLiveData<Event<Resource<Boolean>>>()
     val isConnected: LiveData<Event<Resource<Boolean>>> = _isConnected
@@ -71,9 +69,6 @@ class MusicServiceConnection(private val context: Context) {
         mediaBrowser.unsubscribe(parentId, callback)
     }
 
-    fun preparePlayer(position: Int = 0){
-
-    }
 
 
     private inner class MediaBrowserConnectionCallback(

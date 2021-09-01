@@ -2,6 +2,7 @@ package com.project.songovermusicapp.presentation.ui.viewmodel
 
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat.METADATA_KEY_MEDIA_ID
+import android.support.v4.media.session.PlaybackStateCompat.*
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -44,6 +45,12 @@ class MainViewModel @Inject constructor(
 
     private val refreshing = MutableStateFlow(false)
 
+    private val _isShuffle = MutableLiveData(false)
+    val isShuffle: LiveData<Boolean> = _isShuffle
+
+    private val _isRepeat = MutableLiveData(false)
+    val isRepeat: LiveData<Boolean> = _isRepeat
+
     private val _resourceMediaItems = MutableLiveData<Resource<List<Song>>>()
     val resourceMediaItems: LiveData<Resource<List<Song>>> = _resourceMediaItems
 
@@ -84,10 +91,10 @@ class MainViewModel @Inject constructor(
                 _state.value = it
             }
         }
-            _resourceMediaItems.value = Resource.loading(null)
-            subscribeToSource(START_SOURCE)
-            updateCurrentPlayerPosition()
-            onMainCategorySelected(category = START_CATEGORY)
+        _resourceMediaItems.value = Resource.loading(null)
+        subscribeToSource(START_SOURCE)
+        updateCurrentPlayerPosition()
+        onMainCategorySelected(category = START_CATEGORY)
     }
 
     /** Функция перехода к следующему треку */
@@ -103,6 +110,28 @@ class MainViewModel @Inject constructor(
     /** Функция перехода к точке трека */
     fun seekTo(pos: Long) {
         musicServiceConnection.transportControls.seekTo(pos)
+    }
+
+    fun shuffleToggle() {
+        if (isShuffle.value == false) {
+            musicServiceConnection.transportControls.setShuffleMode(SHUFFLE_MODE_ALL)
+            _isShuffle.postValue(true)
+        }
+        else {
+            musicServiceConnection.transportControls.setShuffleMode(SHUFFLE_MODE_NONE)
+            _isShuffle.postValue(false)
+        }
+    }
+
+    fun repeatToggle(){
+        if(isRepeat.value == false) {
+            musicServiceConnection.transportControls.setRepeatMode(REPEAT_MODE_ONE)
+            _isRepeat.postValue(true)
+        }
+        else{
+            musicServiceConnection.transportControls.setRepeatMode(REPEAT_MODE_NONE)
+            _isRepeat.postValue(false)
+        }
     }
 
     /** Функция переключателя контента */
@@ -150,6 +179,7 @@ class MainViewModel @Inject constructor(
         musicServiceConnection.unsubscribe(
             MEDIA_LOCAL_ID,
             object : MediaBrowserCompat.SubscriptionCallback() {})
+
     }
 
 

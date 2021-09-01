@@ -7,4 +7,6 @@ interface OnPlayerController {
     fun toggleMusic(mediaItem: Song, toggle: Boolean = false, prepare: Boolean = false)
     fun skipToNext()
     fun seekTo(position: Long)
+    fun toggleShuffle()
+    fun toggleRepeat()
 }

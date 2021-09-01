@@ -20,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
 import androidx.navigation.*
@@ -55,12 +56,15 @@ class MainActivity : ComponentActivity() {
 
             val viewState by mainViewModel.state.collectAsState()
             val curPlayingSong by mainViewModel.curPlayingSong.observeAsState()
-            //val curPlayingSource by mainViewModel.curPlayingSource.observeAsState()
             val playbackState by mainViewModel.playbackState.observeAsState()
             val curSongPosition by mainViewModel.curPlayerPosition.observeAsState()
             val curSongDuration by mainViewModel.curSongDuration.observeAsState()
             val resourceResourceState by mainViewModel.resourceMediaItems.observeAsState()
             val curSongQueue by mainViewModel.curQueue.observeAsState()
+            val isShuffle by mainViewModel.isShuffle.observeAsState()
+            val isRepeat by mainViewModel.isRepeat.observeAsState()
+
+            val orientation = LocalConfiguration.current.orientation
 
             val controller = object: OnPlayerController{
                 override fun skipToPrevious() {
@@ -77,6 +81,14 @@ class MainActivity : ComponentActivity() {
 
                 override fun seekTo(position: Long) {
                     mainViewModel.seekTo(position)
+                }
+
+                override fun toggleShuffle() {
+                    mainViewModel.shuffleToggle()
+                }
+
+                override fun toggleRepeat() {
+                    mainViewModel.repeatToggle()
                 }
             }
             val surfaceColor = MaterialTheme.colors.onSurface
@@ -138,7 +150,9 @@ class MainActivity : ComponentActivity() {
                                 curPlayingSong = curPlayingSong,
                                 playbackState = playbackState,
                                 resourceMediaItems = resourceResourceState,
-                                curSongQueue = curSongQueue
+                                curSongQueue = curSongQueue,
+                                isShuffle = isShuffle?: false,
+                                isRepeat = isRepeat?: false
                             )
                         }
                         composable("music_item_screen") {
@@ -149,7 +163,10 @@ class MainActivity : ComponentActivity() {
                                 playbackState = playbackState,
                                 curSongPosition = curSongPosition,
                                 curSongDuration = curSongDuration,
-                                controller = controller
+                                controller = controller,
+                                isShuffle = isShuffle?: false,
+                                isRepeat = isRepeat?: false,
+                                orientation = orientation
                             )
                         }
                     }
@@ -196,6 +213,7 @@ class MainActivity : ComponentActivity() {
             permissionsLauncher.launch(permissionsToRequest.toTypedArray())
         }
     }
+
 }
 
 

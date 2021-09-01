@@ -26,6 +26,20 @@ object ServiceModule {
 
     @ServiceScoped
     @Provides
+    fun provideAudioAttributes() = AudioAttributes.Builder()
+        .setContentType(C.CONTENT_TYPE_MUSIC)
+        .setUsage(C.USAGE_MEDIA)
+        .build()
+
+    @ServiceScoped
+    @Provides
+    fun provideExoPlayer(@ApplicationContext context: Context, audioAttributes: AudioAttributes) = SimpleExoPlayer.Builder(context).build().apply {
+        setAudioAttributes(audioAttributes, true)
+        setHandleAudioBecomingNoisy(true)
+    }
+
+    @ServiceScoped
+    @Provides
     fun provideContentResolver(@ApplicationContext context: Context) = context.contentResolver
 
     @ServiceScoped

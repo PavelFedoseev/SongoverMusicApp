@@ -53,10 +53,11 @@ fun MainContent(
     curPlayingSong: MediaMetadataCompat?,
     playbackState: PlaybackStateCompat?,
     resourceMediaItems: Resource<List<Song>>?,
-    curSongQueue: MutableList<MediaSessionCompat.QueueItem>?
+    curSongQueue: MutableList<MediaSessionCompat.QueueItem>?,
+    isShuffle: Boolean,
+    isRepeat: Boolean
 ) {
 
-    val isShuffle by remember { mutableStateOf(false) }
 
     var curPlayingSongItem by remember { mutableStateOf(SongItem.stopped()) }
 
@@ -193,7 +194,8 @@ fun MainContent(
                 modifier = Modifier,
                 onItemClickListener = mediaListClickListener,
                 dominantColorListener = dominantColorListener,
-                navController = navController
+                navController = navController,
+                isShuffle = isShuffle
             )
         }
 

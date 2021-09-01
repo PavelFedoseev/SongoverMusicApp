@@ -2,9 +2,7 @@ package com.project.songovermusicapp.presentation
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
@@ -36,7 +34,7 @@ fun MainAppBar(
                     contentDescription = stringResource(R.string.app_name),
                     modifier = Modifier
                         .padding(start = 4.dp)
-                        .heightIn(max = 24.dp)
+                        .height(24.dp)
                 )
             }
         },

@@ -15,5 +15,6 @@
     <string name="cd_pause_button">Pause button</string>
     <string name="cd_splash">Splash screen</string>
     <string name="cd_previous">Previous song</string>
+    <string name="cd_shuffle">Shuffle songs</string>
     <string name="cd_next">Next song</string>
 </resources>

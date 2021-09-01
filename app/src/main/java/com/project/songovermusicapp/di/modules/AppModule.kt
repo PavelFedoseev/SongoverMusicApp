@@ -24,16 +24,4 @@ object AppModule {
     @Provides
     fun provideMusicServiceConnection(@ApplicationContext context: Context) = MusicServiceConnection(context)
 
-    @Provides
-    fun provideAudioAttributes() = AudioAttributes.Builder()
-        .setContentType(C.CONTENT_TYPE_MUSIC)
-        .setUsage(C.USAGE_MEDIA)
-        .build()
-
-    @Singleton
-    @Provides
-    fun provideExoPlayer(@ApplicationContext context: Context, audioAttributes: AudioAttributes) = SimpleExoPlayer.Builder(context).build().apply {
-        setAudioAttributes(audioAttributes, true)
-        setHandleAudioBecomingNoisy(true)
-    }
 }

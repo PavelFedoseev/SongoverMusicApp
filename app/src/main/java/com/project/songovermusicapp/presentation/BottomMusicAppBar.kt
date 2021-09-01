@@ -8,6 +8,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.stopScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
@@ -56,7 +57,8 @@ fun BottomBar(
     songItems: List<Song>,
     onItemClickListener: OnItemClickListener,
     dominantColorListener: OnDominantColorListener,
-    navController: NavController
+    navController: NavController,
+    isShuffle: Boolean
 ) {
 
     val pagerState = rememberPagerState(
@@ -71,8 +73,15 @@ fun BottomBar(
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect{
                 page ->
-            if(page + 1 == currentPage || page - 1 == currentPage)
-            onItemClickListener.onItemClickPlay(songItems[page])
+            if(page + 1 == currentPage || page - 1 == currentPage) {
+                if(page + 1 == currentPage){
+                    onItemClickListener.onItemClickPrevious()
+                }
+                else{
+                    onItemClickListener.onItemClickNext()
+                }
+            }
+            else pagerState.stopScroll()
         }
     }
     var dominantColor by remember { mutableStateOf(Color.Transparent) }
@@ -122,7 +131,6 @@ fun BottomBar(
                     }
                     if(songItem != null && songItems.indexOf(songItem)!= -1)
                         currentPage = songItems.indexOf(songItem)
-
                     pagerState.animateScrollToPage(
                         currentPage, initialVelocity = 0.5f,
                         animationSpec = tween(
@@ -130,7 +138,6 @@ fun BottomBar(
                             easing = FastOutSlowInEasing
                         )
                     )
-                    pagerState.scroll {  }
                 }
             }
             HorizontalPager(
