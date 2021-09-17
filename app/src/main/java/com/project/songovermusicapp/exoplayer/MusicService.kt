@@ -74,36 +74,8 @@ class MusicService : MediaBrowserServiceCompat() {
 
     override fun onCreate() {
         super.onCreate()
-
-        firebaseMusicPreparer = MusicPlaybackPreparer(firebaseMusicSource) {
-            //колбэк когда выбран новый трек
-            curPlayingSong = it
-            preparePlayer(
-                firebaseMusicSource.songs,
-                firebaseMusicSource.asMediaSource(dataSourceFactory),
-                it,
-                true
-            )
-            //mediaSessionConnector.setQueueNavigator(MusicQueueNavigator(curMediaSource))
-
-        }
-        localMusicPreparer = MusicPlaybackPreparer(localMusicSource) {
-            //колбэк когда выбран новый трек
-            curPlayingSong = it
-            preparePlayer(
-                localMusicSource.songs,
-                localMusicSource.asMediaSource(dataSourceFactory),
-                it,
-                true
-            )
-            //mediaSessionConnector.setQueueNavigator(MusicQueueNavigator(curMediaSource))
-        }
-        serviceScope.launch {
-            firebaseMusicSource.fetchMedia()
-        }
-        serviceScope.launch {
-            localMusicSource.fetchMedia()
-        }
+        initLocalPreparer()
+        initFirebasePreparer()
         val activityIntent = packageManager.getLaunchIntentForPackage(packageName)?.let {
             PendingIntent.getActivity(this, 0, it, 0)
         }
@@ -142,6 +114,42 @@ class MusicService : MediaBrowserServiceCompat() {
 
     }
 
+    fun initFirebasePreparer(){
+        firebaseMusicPreparer = MusicPlaybackPreparer(firebaseMusicSource) {
+            //колбэк когда выбран новый трек
+            curPlayingSong = it
+            preparePlayer(
+                firebaseMusicSource.songs,
+                firebaseMusicSource.asMediaSource(dataSourceFactory),
+                it,
+                true
+            )
+            //mediaSessionConnector.setQueueNavigator(MusicQueueNavigator(curMediaSource))
+
+        }
+        serviceScope.launch {
+            firebaseMusicSource.fetchMedia()
+        }
+
+    }
+
+    fun initLocalPreparer(){
+        localMusicPreparer = MusicPlaybackPreparer(localMusicSource) {
+            //колбэк когда выбран новый трек
+            curPlayingSong = it
+            preparePlayer(
+                localMusicSource.songs,
+                localMusicSource.asMediaSource(dataSourceFactory),
+                it,
+                true
+            )
+            //mediaSessionConnector.setQueueNavigator(MusicQueueNavigator(curMediaSource))
+        }
+
+        serviceScope.launch {
+            localMusicSource.fetchMedia()
+        }
+    }
 
     private fun preparePlayer(
         songs: List<MediaMetadataCompat>,
@@ -170,7 +178,6 @@ class MusicService : MediaBrowserServiceCompat() {
     override fun onDestroy() {
         super.onDestroy()
         serviceScope.cancel()
-
         exoPlayer.removeListener(musicPlayerListener)
         exoPlayer.release()
     }

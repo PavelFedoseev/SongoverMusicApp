@@ -14,12 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.navigation.NavAction
 import androidx.navigation.NavController
-import androidx.navigation.NavOptions
-import androidx.navigation.Navigator
 import com.project.songovermusicapp.R
-import com.project.songovermusicapp.presentation.util.Navigation
 import kotlinx.coroutines.delay
 
 @Composable
@@ -30,7 +26,7 @@ fun SplashScreen(navController: NavController) {
     }
 
     LaunchedEffect(key1 = true){
-        scale.animateTo(0.4f, animationSpec = tween(
+        scale.animateTo(1f, animationSpec = tween(
             durationMillis = 1000,
             easing = {
                 OvershootInterpolator(2f).getInterpolation(it)

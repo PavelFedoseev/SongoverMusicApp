@@ -69,6 +69,9 @@ class MusicServiceConnection(private val context: Context) {
         mediaBrowser.unsubscribe(parentId, callback)
     }
 
+    fun changeLoadChild(parentId: String){
+    }
+
 
 
     private inner class MediaBrowserConnectionCallback(
