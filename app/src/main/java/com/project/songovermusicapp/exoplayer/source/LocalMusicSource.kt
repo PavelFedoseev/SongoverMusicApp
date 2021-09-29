@@ -42,7 +42,7 @@ class LocalMusicSource @Inject constructor(val contentResolver: ContentResolver)
     override suspend fun fetchMedia(): Unit = withContext(Dispatchers.IO) {
         state = STATE_INITIALIZING
         val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
+            MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
         } else {
             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
         }

@@ -131,13 +131,15 @@ fun BottomBar(
                     }
                     if(songItem != null && songItems.indexOf(songItem)!= -1)
                         currentPage = songItems.indexOf(songItem)
-                    pagerState.animateScrollToPage(
-                        currentPage, initialVelocity = 0.5f,
-                        animationSpec = tween(
-                            durationMillis = 700,
-                            easing = FastOutSlowInEasing
+                    if(pagerState.pageCount >= currentPage) {
+                        pagerState.animateScrollToPage(
+                            currentPage, initialVelocity = 0.5f,
+                            animationSpec = tween(
+                                durationMillis = 700,
+                                easing = FastOutSlowInEasing
+                            )
                         )
-                    )
+                    }
                 }
             }
             HorizontalPager(

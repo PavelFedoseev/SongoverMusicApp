@@ -17,12 +17,14 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.project.songovermusicapp.R
@@ -87,8 +89,20 @@ fun SongItem(song: Song, songPosition: Int, itemClickListener: OnItemClickListen
             Row(
                 modifier = Modifier
                     .padding(SongPadding)
-                    .fillMaxWidth()
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                if(songState == SongState.PLAYING){
+//                    Image(painter = painterResource(id = R.drawable.ic_pause), contentDescription = stringResource(
+//                        id = R.string.cd_pause_button
+//                    ))
+                    Text(text = "PLAYING", modifier = Modifier.rotate(90f).height(20.dp))
+                }
+                else if(songState == SongState.PAUSED)
+//                    Image(painter = painterResource(id = R.drawable.ic_play), contentDescription = stringResource(
+//                        id = R.string.cd_play_button
+//                    ))
+                    Text(text = "PAUSED", modifier = Modifier.rotate(90f).height(20.dp))
                 Card(
                     modifier = Modifier
                         .width(SongImageSize)
@@ -144,15 +158,7 @@ fun SongItem(song: Song, songPosition: Int, itemClickListener: OnItemClickListen
 
                         }
                     )
-                    if(songState == SongState.PLAYING){
-                        Image(painter = painterResource(id = R.drawable.ic_pause), contentDescription = stringResource(
-                            id = R.string.cd_pause_button
-                        ))
-                    }
-                    else if(songState == SongState.PAUSED)
-                        Image(painter = painterResource(id = R.drawable.ic_play), contentDescription = stringResource(
-                            id = R.string.cd_play_button
-                        ))
+
                 }
                 Spacer(modifier = Modifier.width(30.dp))
                 Column {
