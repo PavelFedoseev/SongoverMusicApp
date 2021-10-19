@@ -333,6 +333,7 @@ private fun MusicItemPlayerController(
             val repeatCon = createRefFor("repeatCon")
 
             constrain(shuffleCon) {
+                start.linkTo(parent.start)
                 top.linkTo(parent.top)
                 bottom.linkTo(parent.bottom)
                 end.linkTo(previousCon.start)
@@ -376,6 +377,7 @@ private fun MusicItemPlayerController(
                 top.linkTo(parent.top)
                 bottom.linkTo(parent.bottom)
                 start.linkTo(nextCon.end)
+                end.linkTo(parent.end)
                 width = Dimension.value(
                     MusicItemScreenControllerBtnHeight
                             + MusicItemScreenPadding +
@@ -384,8 +386,7 @@ private fun MusicItemPlayerController(
             }
         }
         ConstraintLayout(modifier = Modifier.fillMaxWidth(), constraintSet = constraintSet) {
-            Card(modifier = Modifier.layoutId("shuffleCon")
-                .padding(horizontal = MusicItemScreenPadding),
+            Card(modifier = Modifier.layoutId("shuffleCon").padding(start = 20.dp, end = 10.dp),
                 onClick = {listener.toggleShuffle()}) {
                 Image(
                     painter = if (isShuffle) painterResource(id = R.drawable.exo_icon_shuffle_on) else painterResource(
@@ -467,8 +468,7 @@ private fun MusicItemPlayerController(
                     )
                 )
             }
-            Card(modifier = Modifier.layoutId("repeatCon")
-                .padding(horizontal = MusicItemScreenPadding),
+            Card(modifier = Modifier.layoutId("repeatCon").padding(end = 20.dp, start = 10.dp),
                 onClick = {listener.toggleRepeat()}) {
                 Image(
                     painter = if (isRepeat){ painterResource(id = R.drawable.exo_icon_repeat_one)} else{ painterResource(

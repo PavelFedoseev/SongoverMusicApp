@@ -20,9 +20,9 @@ val SongItemTextSubtitle = 13.sp
 
 val MusicItemScreenTopBar = 30.dp
 val MusicItemScreenImageSize = 300.dp
-val MusicItemScreenPadding = 15.dp
-val MusicItemScreenPaddingEnd = 20.dp
-val MusicItemScreenPaddingStart = 20.dp
+val MusicItemScreenPadding = 7.dp
+val MusicItemScreenPaddingEnd = 15.dp
+val MusicItemScreenPaddingStart = 15.dp
 val MusicItemScreenBottomBar = 40.dp
 val MusicItemScreenImageRoundness = 30.dp
 val MusicItemScreenControllerBtnHeight = 60.dp

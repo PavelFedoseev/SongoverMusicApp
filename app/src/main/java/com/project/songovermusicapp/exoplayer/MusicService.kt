@@ -105,7 +105,7 @@ class MusicService : MediaBrowserServiceCompat() {
         }
         mediaSessionConnector = MediaSessionConnector(mediaSession)
         mediaSessionConnector.setPlayer(exoPlayer)
-        mediaSessionConnector.setQueueNavigator(MusicQueueNavigator(localMusicSource))
+//        mediaSessionConnector.setQueueNavigator(MusicQueueNavigator(localMusicSource))
 
         musicPlayerListener = MusicPlayerListener(this)
         exoPlayer.addListener(musicPlayerListener)
@@ -208,12 +208,12 @@ class MusicService : MediaBrowserServiceCompat() {
                         )
                         if (curPlayingSource != parentId && firebaseMusicSource.songs.isNotEmpty()) {
                             mediaSessionConnector.setPlaybackPreparer(firebaseMusicPreparer)
-                            preparePlayer(
-                                firebaseMusicSource.songs,
-                                firebaseMusicSource.asMediaSource(dataSourceFactory),
-                                firebaseMusicSource.songs[0],
-                                false
-                            )
+//                            preparePlayer(
+//                                firebaseMusicSource.songs,
+//                                firebaseMusicSource.asMediaSource(dataSourceFactory),
+//                                firebaseMusicSource.songs[0],
+//                                false
+//                            )
                             isPlayerInitialized = true
                             curPlayingSource = parentId
                         }
@@ -239,12 +239,12 @@ class MusicService : MediaBrowserServiceCompat() {
                         )
                         if (curPlayingSource != parentId && localMusicSource.songs.isNotEmpty()) {
                             mediaSessionConnector.setPlaybackPreparer(localMusicPreparer)
-                            preparePlayer(
-                                localMusicSource.songs,
-                                localMusicSource.asMediaSource(dataSourceFactory),
-                                localMusicSource.songs[0],
-                                false
-                            )
+//                            preparePlayer(
+//                                localMusicSource.songs,
+//                                localMusicSource.asMediaSource(dataSourceFactory),
+//                                localMusicSource.songs[0],
+//                                false
+//                            )
                             isPlayerInitialized = true
                             curPlayingSource = parentId
                         }

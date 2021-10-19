@@ -38,6 +38,9 @@ class MusicServiceConnection(private val context: Context) {
     private val _currentlyPlayingSong = MutableLiveData<MediaMetadataCompat?>()
     val currentlyPlayingSong: LiveData<MediaMetadataCompat?> = _currentlyPlayingSong
 
+    private val _currentlyPlayingSongPos = MutableLiveData<Int?>()
+    val currentlyPlayingSongPos: LiveData<Int?> = _currentlyPlayingSongPos
+
     private val mediaBrowserConnectionCallback = MediaBrowserConnectionCallback(context)
 
     private val _curQueue =
@@ -119,6 +122,8 @@ class MusicServiceConnection(private val context: Context) {
             _currentlyPlayingSong.postValue(metadata)
         }
 
+
+
         override fun onSessionEvent(event: String?, extras: Bundle?) {
             super.onSessionEvent(event, extras)
             when (event) {
@@ -133,6 +138,7 @@ class MusicServiceConnection(private val context: Context) {
 
         override fun onQueueChanged(queue: MutableList<MediaSessionCompat.QueueItem>?) {
             _curQueue.postValue(queue)
+
         }
 
         override fun onSessionDestroyed() {

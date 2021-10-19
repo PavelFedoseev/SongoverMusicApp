@@ -29,7 +29,7 @@ fun SplashScreen(navController: NavController) {
 
 
         LaunchedEffect(key1 = true) {
-            scale.animateTo(2f, animationSpec = tween(
+            scale.animateTo(1f, animationSpec = tween(
                 durationMillis = 1000,
                 easing = {
                     OvershootInterpolator(2.5f).getInterpolation(it)

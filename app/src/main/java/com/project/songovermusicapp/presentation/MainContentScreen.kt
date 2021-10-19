@@ -27,7 +27,6 @@ import com.project.songovermusicapp.R
 import com.project.songovermusicapp.data.entities.Song
 import com.project.songovermusicapp.data.other.Resource
 import com.project.songovermusicapp.data.other.Status
-import com.project.songovermusicapp.exoplayer.extensions.toSong
 import com.project.songovermusicapp.exoplayer.toSong
 import com.project.songovermusicapp.presentation.musiclist.MusicList
 import com.project.songovermusicapp.presentation.musiclist.OnItemClickListener
@@ -62,12 +61,6 @@ fun MainContent(
     var curPlayingSongItem by remember { mutableStateOf(SongItem.stopped()) }
 
     var songItems by remember { mutableStateOf(emptyList<Song>()) }
-
-    var queueItems by remember { mutableStateOf(emptyList<Song>()) }
-
-    queueItems = curSongQueue?.let{
-        it.mapNotNull{item -> item.toSong()}
-    }?: emptyList()
 
     when (resourceMediaItems?.status) {
         Status.SUCCESS -> {
@@ -188,9 +181,10 @@ fun MainContent(
             }
         }
         Column(modifier = Modifier.layoutId("bottomMusicBar")) {
-            BottomBar(
-                curSongItem = curPlayingSongItem,
-                songItems = if(isShuffle) queueItems else songItems,
+            BottomMusicBar(
+                playbackState = playbackState,
+                curSongMetadata = curPlayingSong,
+                sessionQueueItems = curSongQueue,
                 modifier = Modifier,
                 onItemClickListener = mediaListClickListener,
                 dominantColorListener = dominantColorListener,

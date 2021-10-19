@@ -2,6 +2,9 @@ package com.project.songovermusicapp.presentation
 
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
+import android.support.v4.media.MediaMetadataCompat
+import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -12,7 +15,6 @@ import androidx.compose.foundation.gestures.stopScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
-import kotlinx.coroutines.flow.collect
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
@@ -38,6 +40,8 @@ import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import com.project.songovermusicapp.R
 import com.project.songovermusicapp.data.entities.Song
+import com.project.songovermusicapp.exoplayer.extensions.toSong
+import com.project.songovermusicapp.exoplayer.toSong
 import com.project.songovermusicapp.presentation.musiclist.OnItemClickListener
 import com.project.songovermusicapp.presentation.ui.theme.*
 import com.project.songovermusicapp.presentation.ui.viewmodel.SongItem
@@ -46,23 +50,43 @@ import com.project.songovermusicapp.presentation.util.OnDominantColorListener
 import com.project.songovermusicapp.presentation.util.calcDominantColor
 import com.skydoves.landscapist.CircularRevealedImage
 import com.skydoves.landscapist.glide.GlideImage
+import kotlinx.coroutines.flow.collect
 
 @ExperimentalMaterialApi
 @ExperimentalPagerApi
 @Composable
-fun BottomBar(
+fun BottomMusicBar(
     modifier: Modifier = Modifier,
     pagerModifier: Modifier = Modifier,
-    curSongItem: SongItem?,
-    songItems: List<Song>,
+    curSongMetadata: MediaMetadataCompat?,
+    playbackState: PlaybackStateCompat?,
+    sessionQueueItems: List<MediaSessionCompat.QueueItem>?,
     onItemClickListener: OnItemClickListener,
     dominantColorListener: OnDominantColorListener,
     navController: NavController,
     isShuffle: Boolean
 ) {
 
+    var curPlayingSongItem by remember { mutableStateOf(SongItem.stopped()) }
+
+    curSongMetadata?.toSong()?.let {
+        when (playbackState?.state) {
+            PlaybackStateCompat.STATE_PAUSED -> {
+                curPlayingSongItem = SongItem.paused(it)
+            }
+            PlaybackStateCompat.STATE_PLAYING -> {
+                curPlayingSongItem = SongItem.playing(it)
+            }
+            else -> {
+
+            }
+        }
+    }
+
+    val curQueueItems = sessionQueueItems?: emptyList()
+
     val pagerState = rememberPagerState(
-        pageCount = songItems.size,
+        pageCount = curQueueItems.size,
         initialOffscreenLimit = 2
     )
 
@@ -71,17 +95,14 @@ fun BottomBar(
     }
 
     LaunchedEffect(pagerState) {
-        snapshotFlow { pagerState.currentPage }.collect{
-                page ->
-            if(page + 1 == currentPage || page - 1 == currentPage) {
-                if(page + 1 == currentPage){
+        snapshotFlow { pagerState.currentPage }.collect { page ->
+            if (page + 1 == currentPage || page - 1 == currentPage) {
+                if (page + 1 == currentPage) {
                     onItemClickListener.onItemClickPrevious()
-                }
-                else{
+                } else {
                     onItemClickListener.onItemClickNext()
                 }
-            }
-            else pagerState.stopScroll()
+            } else pagerState.stopScroll()
         }
     }
     var dominantColor by remember { mutableStateOf(Color.Transparent) }
@@ -93,7 +114,6 @@ fun BottomBar(
             .height(BottomBarHeight)
             .background(Brush.verticalGradient(listOf(Color.Transparent, animateDominantColor)))
     ) {
-        val song = curSongItem?.song ?: Song()
 
         val constraintSet = ConstraintSet {
             val imageCard = createRefFor("imageCard")
@@ -123,15 +143,15 @@ fun BottomBar(
             .clickable {
                 navController.navigate("music_item_screen")
             }) {
-            LaunchedEffect(key1 = curSongItem) {
+            LaunchedEffect(key1 = curSongMetadata) {
 
-                if (songItems.isNotEmpty()) {
-                    val songItem = songItems.find {
-                        it.mediaId == curSongItem?.song?.mediaId
+                if (curQueueItems.isNotEmpty()) {
+                    val queueItem = curQueueItems.find {
+                        it.description.mediaId == curSongMetadata?.description?.mediaId
                     }
-                    if(songItem != null && songItems.indexOf(songItem)!= -1)
-                        currentPage = songItems.indexOf(songItem)
-                    if(pagerState.pageCount >= currentPage) {
+                    if (queueItem != null && curQueueItems.indexOf(queueItem) != -1)
+                        currentPage = curQueueItems.indexOf(queueItem)
+                    if (pagerState.pageCount >= currentPage) {
                         pagerState.animateScrollToPage(
                             currentPage, initialVelocity = 0.5f,
                             animationSpec = tween(
@@ -146,9 +166,9 @@ fun BottomBar(
                 state = pagerState,
                 modifier = pagerModifier.layoutId("pagerConstraint")
             ) { page ->
-                if(page < songItems.size) {
-                    val songPage = songItems[page]
-                    PagerSongItem(song = songPage)
+                if (page < curQueueItems.size) {
+
+                    PagerSongItem(song = curQueueItems[page].toSong())
                 }
 
             }
@@ -164,7 +184,7 @@ fun BottomBar(
                     modifier = Modifier
                         .width(SongImageSize)
                         .height(SongImageSize),
-                    imageModel = song.imageUrl,
+                    imageModel = curPlayingSongItem.song?.imageUrl ?: "",
                     loading = {
                         ConstraintLayout(
                             modifier = Modifier.fillMaxSize()
@@ -214,10 +234,10 @@ fun BottomBar(
                 shape = RoundedCornerShape(BottomBarPlayerRoundness),
                 elevation = 8.dp,
                 onClick = {
-                    curSongItem?.song?.let { onItemClickListener.onItemClickPlay(it) }
+                    curPlayingSongItem.song?.let { onItemClickListener.onItemClickPlay(it) }
                 }
             ) {
-                val painter = when (curSongItem?.songState) {
+                val painter = when (curPlayingSongItem.songState) {
                     SongState.PLAYING -> {
                         painterResource(id = R.drawable.ic_pause)
                     }
@@ -241,23 +261,23 @@ fun BottomBar(
 }
 
 @Composable
-fun PagerSongItem(song: Song, gradientColor: Color? = null) {
-    val constraintSet = ConstraintSet(){
+fun PagerSongItem(song: Song?, gradientColor: Color? = null) {
+    val constraintSet = ConstraintSet() {
         val startSpacer = createRefFor("startSpacer")
         val textBox = createRefFor("textBox")
         val endSpacer = createRefFor("endSpacer")
-        constrain(startSpacer){
+        constrain(startSpacer) {
             top.linkTo(parent.top)
             bottom.linkTo(parent.bottom)
             start.linkTo(parent.start)
         }
-        constrain(textBox){
+        constrain(textBox) {
             top.linkTo(parent.top)
             start.linkTo(startSpacer.end)
             end.linkTo(endSpacer.start)
             width = Dimension.fillToConstraints
         }
-        constrain(endSpacer){
+        constrain(endSpacer) {
             top.linkTo(parent.top)
             bottom.linkTo(parent.bottom)
             end.linkTo(parent.end)
@@ -277,8 +297,18 @@ fun PagerSongItem(song: Song, gradientColor: Color? = null) {
         )
         Box(modifier = Modifier.layoutId("textBox")) {
             Column {
-                Text(text = song.title, fontSize = SongItemTextTitle, maxLines = 1, overflow = TextOverflow.Ellipsis )
-                Text(text = song.subtitle, fontSize = SongItemTextSubtitle, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(
+                    text = song?.title ?: "",
+                    fontSize = SongItemTextTitle,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = song?.subtitle ?: "",
+                    fontSize = SongItemTextSubtitle,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
         Spacer(

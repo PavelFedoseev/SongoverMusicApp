@@ -3,7 +3,6 @@ package com.project.songovermusicapp.presentation.musiclist
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -22,17 +21,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
-import com.project.songovermusicapp.R
 import com.project.songovermusicapp.data.entities.Song
 import com.project.songovermusicapp.presentation.ui.theme.*
 import com.project.songovermusicapp.presentation.ui.viewmodel.SongItem
 import com.project.songovermusicapp.presentation.ui.viewmodel.SongState
-import com.project.songovermusicapp.presentation.util.OnDominantColorListener
 import com.project.songovermusicapp.presentation.util.calcDominantColor
 import com.skydoves.landscapist.CircularRevealedImage
 import com.skydoves.landscapist.glide.GlideImage
@@ -52,11 +48,6 @@ fun MusicList(
             SongItem(song = song, songPosition = list.indexOf(song), itemClickListener, songState)
         })
     }
-}
-
-@Composable
-fun MusicProgressBar() {
-
 }
 
 @Composable
@@ -82,27 +73,42 @@ fun SongItem(song: Song, songPosition: Int, itemClickListener: OnItemClickListen
                         endX = 700f
                     )
                 )
-                .fillMaxSize()
+                .fillMaxSize(),
+            contentAlignment = Alignment.CenterStart
 
         )
+
         {
+                if (songState == SongState.PLAYING) {
+                    Text(
+                        modifier = Modifier
+                            .rotate(90f)
+                            .offset(y = 15.dp),
+                        text = "PLAYING",
+                        maxLines = 1,
+                        overflow = TextOverflow.Visible,
+                        textAlign = TextAlign.Center
+                    )
+                } else if (songState == SongState.PAUSED)
+                    Text(
+                        modifier = Modifier
+                            .rotate(90f)
+                            .offset(y = 15.dp),
+                        text = "PAUSED",
+                        maxLines = 1,
+                        textAlign = TextAlign.Center,
+                        overflow = TextOverflow.Visible
+                    )
             Row(
                 modifier = Modifier
                     .padding(SongPadding)
                     .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if(songState == SongState.PLAYING){
-//                    Image(painter = painterResource(id = R.drawable.ic_pause), contentDescription = stringResource(
-//                        id = R.string.cd_pause_button
-//                    ))
-                    Text(text = "PLAYING", modifier = Modifier.rotate(90f).height(20.dp))
+                if (songState == SongState.PLAYING || songState == SongState.PAUSED) {
+                    Spacer(modifier = Modifier.width(30.dp))
                 }
-                else if(songState == SongState.PAUSED)
-//                    Image(painter = painterResource(id = R.drawable.ic_play), contentDescription = stringResource(
-//                        id = R.string.cd_play_button
-//                    ))
-                    Text(text = "PAUSED", modifier = Modifier.rotate(90f).height(20.dp))
+
                 Card(
                     modifier = Modifier
                         .width(SongImageSize)
@@ -148,7 +154,7 @@ fun SongItem(song: Song, songPosition: Int, itemClickListener: OnItemClickListen
                                 CircularRevealedImage(
                                     bitmap = it,
                                     contentDescription = "Music Image",
-                                    circularRevealedEnabled = true,
+                                    circularRevealedEnabled = false,
                                     circularRevealedDuration = 1000,
                                     contentScale = ContentScale.Crop
                                 )
