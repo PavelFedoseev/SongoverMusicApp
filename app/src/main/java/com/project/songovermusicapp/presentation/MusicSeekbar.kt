@@ -23,7 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.ConstraintSet
 import androidx.constraintlayout.compose.Dimension
-import com.project.songovermusicapp.presentation.ui.theme.MusicItemScreenPadding
+import com.project.songovermusicapp.presentation.ui.theme.MusicSeekBarTimePaddingToBorder
+import com.project.songovermusicapp.presentation.ui.theme.MusicSeekBarTimePaddingToProgress
 import com.project.songovermusicapp.presentation.ui.theme.SongoverMusicAppTheme
 import java.text.SimpleDateFormat
 import java.util.*
@@ -102,7 +103,6 @@ fun MusicSeekBar(
         modifier = modifier
             .fillMaxWidth()
     ) {
-
         Text(
             text = SimpleDateFormat(
                 "mm:ss",
@@ -116,7 +116,7 @@ fun MusicSeekBar(
                 )
             ),
             modifier = Modifier
-                .padding(horizontal = MusicItemScreenPadding)
+                .padding(start = MusicSeekBarTimePaddingToBorder, end = MusicSeekBarTimePaddingToProgress)
                 .layoutId("textCurSongPos")
         )
         Box(modifier = Modifier
@@ -172,7 +172,7 @@ fun MusicSeekBar(
         Text(
             text = SimpleDateFormat("mm:ss", Locale.getDefault()).format(curSongDuration),
             modifier = Modifier
-                .padding(horizontal = MusicItemScreenPadding)
+                .padding(end = MusicSeekBarTimePaddingToBorder, start = MusicSeekBarTimePaddingToProgress)
                 .layoutId("textCurSongDuration")
         )
     }

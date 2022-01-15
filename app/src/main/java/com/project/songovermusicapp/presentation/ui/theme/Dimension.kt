@@ -12,6 +12,9 @@ val BottomBarPlayerRoundness = 30.dp
 val BottomBarItemSpacer = 80.dp
 val BottomBarHeight = 90.dp
 
+val MusicSeekBarTimePaddingToBorder = 16.dp
+val MusicSeekBarTimePaddingToProgress = 30.dp
+
 val TabCategoryExpandedSize = 20.sp
 val TabCategoryCollapsedSize = 12.sp
 
