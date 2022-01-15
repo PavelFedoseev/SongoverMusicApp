@@ -32,7 +32,7 @@ class MainViewModel @Inject constructor(
     private val musicServiceConnection: MusicServiceConnection
 ) : ViewModel() {
     // Выбранная категория
-    private val selectedCategory = MutableStateFlow(MainCategory.Local)
+    private val selectedCategory = MutableStateFlow(MainCategory.Songs)
 
     // Доступные категории
     private val categories = MutableStateFlow(MainCategory.values().asList())
@@ -163,9 +163,9 @@ class MainViewModel @Inject constructor(
         selectedCategory.value = category
         when (category) {
             MainCategory.Remote -> {
-                subscribeToSource(MEDIA_FIREBASE_ID)
+                subscribeToSource(MEDIA_LOCAL_ID)
             }
-            MainCategory.Local -> {
+            MainCategory.Songs -> {
                 subscribeToSource(MEDIA_LOCAL_ID)
             }
         }
@@ -173,9 +173,6 @@ class MainViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        musicServiceConnection.unsubscribe(
-            MEDIA_FIREBASE_ID,
-            object : MediaBrowserCompat.SubscriptionCallback() {})
         musicServiceConnection.unsubscribe(
             MEDIA_LOCAL_ID,
             object : MediaBrowserCompat.SubscriptionCallback() {})
@@ -230,7 +227,7 @@ class MainViewModel @Inject constructor(
 }
 
 enum class MainCategory {
-    Local, Remote
+    Songs, Remote
 }
 
 data class MainViewState(

@@ -147,7 +147,7 @@ fun MainContent(
         }
         Column(modifier = Modifier.layoutId("mainContent")) {
             if (mainCategories.isNotEmpty()) {
-                MainCategoriesTabs(
+                TopBarLazyColumn(
                     modifier = Modifier.background(
                         Brush.verticalGradient(
                             listOf(
@@ -171,7 +171,7 @@ fun MainContent(
                         curPlayingSongItem = curPlayingSongItem
                     )
                 }
-                MainCategory.Local -> {
+                MainCategory.Songs -> {
                     MusicList(
                         list = songItems,
                         itemClickListener = mediaListClickListener,
@@ -225,7 +225,7 @@ fun MainCategoriesTabs(
                     Text(
                         text = when (category) {
                             MainCategory.Remote -> stringResource(id = R.string.tab_remote)
-                            MainCategory.Local -> stringResource(id = R.string.tab_local)
+                            MainCategory.Songs -> stringResource(id = R.string.tab_local)
                         },
                         fontSize = if (index == selectedIndex) TabCategoryExpandedSize else TabCategoryCollapsedSize
                     )

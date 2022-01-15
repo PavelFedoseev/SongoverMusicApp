@@ -53,8 +53,7 @@ class MusicService : MediaBrowserServiceCompat() {
 
     private lateinit var musicNotificationManager: MusicNotificationManager
 
-    private val serviceJob = Job()
-    private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
+    private val serviceScope = CoroutineScope(Dispatchers.IO)
 
     private lateinit var mediaSession: MediaSessionCompat
     private lateinit var mediaSessionConnector: MediaSessionConnector
@@ -75,7 +74,6 @@ class MusicService : MediaBrowserServiceCompat() {
     override fun onCreate() {
         super.onCreate()
         initLocalPreparer()
-        initFirebasePreparer()
         val activityIntent = packageManager.getLaunchIntentForPackage(packageName)?.let {
             PendingIntent.getActivity(this, 0, it, 0)
         }
@@ -105,7 +103,7 @@ class MusicService : MediaBrowserServiceCompat() {
         }
         mediaSessionConnector = MediaSessionConnector(mediaSession)
         mediaSessionConnector.setPlayer(exoPlayer)
-//        mediaSessionConnector.setQueueNavigator(MusicQueueNavigator(localMusicSource))
+        mediaSessionConnector.setQueueNavigator(MusicQueueNavigator(localMusicSource))
 
         musicPlayerListener = MusicPlayerListener(this)
         exoPlayer.addListener(musicPlayerListener)
@@ -208,12 +206,12 @@ class MusicService : MediaBrowserServiceCompat() {
                         )
                         if (curPlayingSource != parentId && firebaseMusicSource.songs.isNotEmpty()) {
                             mediaSessionConnector.setPlaybackPreparer(firebaseMusicPreparer)
-//                            preparePlayer(
-//                                firebaseMusicSource.songs,
-//                                firebaseMusicSource.asMediaSource(dataSourceFactory),
-//                                firebaseMusicSource.songs[0],
-//                                false
-//                            )
+                            preparePlayer(
+                                firebaseMusicSource.songs,
+                                firebaseMusicSource.asMediaSource(dataSourceFactory),
+                                firebaseMusicSource.songs[0],
+                                false
+                            )
                             isPlayerInitialized = true
                             curPlayingSource = parentId
                         }
@@ -239,12 +237,12 @@ class MusicService : MediaBrowserServiceCompat() {
                         )
                         if (curPlayingSource != parentId && localMusicSource.songs.isNotEmpty()) {
                             mediaSessionConnector.setPlaybackPreparer(localMusicPreparer)
-//                            preparePlayer(
-//                                localMusicSource.songs,
-//                                localMusicSource.asMediaSource(dataSourceFactory),
-//                                localMusicSource.songs[0],
-//                                false
-//                            )
+                            preparePlayer(
+                                localMusicSource.songs,
+                                localMusicSource.asMediaSource(dataSourceFactory),
+                                localMusicSource.songs[0],
+                                false
+                            )
                             isPlayerInitialized = true
                             curPlayingSource = parentId
                         }

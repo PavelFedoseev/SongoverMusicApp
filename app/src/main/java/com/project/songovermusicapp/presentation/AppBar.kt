@@ -14,6 +14,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.project.songovermusicapp.R
+import com.project.songovermusicapp.presentation.ui.theme.AppBarTextLogoSize
 
 @Composable
 fun MainAppBar(
@@ -23,7 +24,7 @@ fun MainAppBar(
 
     TopAppBar(
         title = {
-            Row(Modifier.background(Color.Transparent).height(30.dp)) {
+            Row(Modifier.background(Color.Transparent).height(20.dp)) {
                 Image(
                     painter = painterResource(R.drawable.ic_logo),
                     contentDescription = null
@@ -33,7 +34,7 @@ fun MainAppBar(
                     contentDescription = stringResource(R.string.app_name),
                     modifier = Modifier
                         .padding(start = 4.dp)
-                        .height(30.dp)
+                        .size(AppBarTextLogoSize)
                 )
             }
         },
