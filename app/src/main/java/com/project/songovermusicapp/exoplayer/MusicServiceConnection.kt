@@ -6,15 +6,27 @@ import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaControllerCompat
+import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.google.android.exoplayer2.SimpleExoPlayer
 import com.project.songovermusicapp.R
+import com.project.songovermusicapp.data.constants.Constants.CUSTOM_ACTION_PREPARE
+import com.project.songovermusicapp.data.constants.Constants.EXTERNAL_ERROR_EVENT
 import com.project.songovermusicapp.data.constants.Constants.NETWORK_ERROR_EVENT
 import com.project.songovermusicapp.data.other.Event
 import com.project.songovermusicapp.data.other.Resource
+import com.project.songovermusicapp.reconnect
+import timber.log.Timber
+import javax.inject.Inject
 
 class MusicServiceConnection(private val context: Context) {
+
+    companion object{
+        private const val TAG = "MusicServiceConnection"
+    }
+
     private val _isConnected = MutableLiveData<Event<Resource<Boolean>>>()
     val isConnected: LiveData<Event<Resource<Boolean>>> = _isConnected
 
@@ -27,7 +39,14 @@ class MusicServiceConnection(private val context: Context) {
     private val _currentlyPlayingSong = MutableLiveData<MediaMetadataCompat?>()
     val currentlyPlayingSong: LiveData<MediaMetadataCompat?> = _currentlyPlayingSong
 
+    private val _currentlyPlayingSongPos = MutableLiveData<Int?>()
+    val currentlyPlayingSongPos: LiveData<Int?> = _currentlyPlayingSongPos
+
     private val mediaBrowserConnectionCallback = MediaBrowserConnectionCallback(context)
+
+    private val _curQueue =
+        MutableLiveData(emptyList<MediaSessionCompat.QueueItem>().toMutableList())
+    val curQueue: LiveData<MutableList<MediaSessionCompat.QueueItem>> = _curQueue
 
     private val mediaBrowser = MediaBrowserCompat(
         context,
@@ -45,13 +64,23 @@ class MusicServiceConnection(private val context: Context) {
         get() = mediaController.transportControls
 
     /** Подписка на получение объектов медиа по определённому parentId*/
-    fun subscribe(parrentId: String, callback: MediaBrowserCompat.SubscriptionCallback){
-        mediaBrowser.subscribe(parrentId, callback)
+    fun subscribe(parentId: String, callback: MediaBrowserCompat.SubscriptionCallback) {
+        mediaBrowser.subscribe(parentId, callback)
     }
+
+    fun reconnect(){
+        mediaBrowser.reconnect()
+    }
+
     /** Отписка от объектов медиа по parentId*/
-    fun unsubscribe(parrentId: String, callback: MediaBrowserCompat.SubscriptionCallback){
-        mediaBrowser.unsubscribe(parrentId, callback)
+    fun unsubscribe(parentId: String, callback: MediaBrowserCompat.SubscriptionCallback) {
+        mediaBrowser.unsubscribe(parentId, callback)
     }
+
+    fun preparePlayer(source: String){
+        mediaBrowser.sendCustomAction("PreparePlayer", Bundle().apply { putString("SOURCE", source) }, null)
+    }
+
 
     private inner class MediaBrowserConnectionCallback(
         private val context: Context
@@ -85,6 +114,8 @@ class MusicServiceConnection(private val context: Context) {
                 )
             )
         }
+
+
     }
 
     private inner class MediaControllerCallback : MediaControllerCompat.Callback() {
@@ -96,13 +127,23 @@ class MusicServiceConnection(private val context: Context) {
             _currentlyPlayingSong.postValue(metadata)
         }
 
+
+
         override fun onSessionEvent(event: String?, extras: Bundle?) {
             super.onSessionEvent(event, extras)
             when (event) {
                 NETWORK_ERROR_EVENT -> _networkError.postValue(
                     Event(Resource.error(context.getString(R.string.message_network_error), null))
                 )
+                EXTERNAL_ERROR_EVENT -> _networkError.postValue(
+                    Event(Resource.error(context.getString(R.string.message_external_error), null))
+                )
             }
+        }
+
+        override fun onQueueChanged(queue: MutableList<MediaSessionCompat.QueueItem>?) {
+            _curQueue.postValue(queue)
+
         }
 
         override fun onSessionDestroyed() {
