@@ -20,6 +20,6 @@
 - DI: Dagger 2 & Hilt
 - LiveData
 
-![screen_0](https://firebasestorage.googleapis.com/v0/b/songoverapp.appspot.com/o/app_screenshots%2FScreenshot_20220127-201223.png?alt=media&token=66c8f5b7-6ca3-4615-a112-52cc6c6019a0)
-![screen_1](https://firebasestorage.googleapis.com/v0/b/songoverapp.appspot.com/o/app_screenshots%2FScreenshot_20220127-201318.png?alt=media&token=2aa0c053-f237-4e53-8d62-43783138493e)
-![screen_2](https://firebasestorage.googleapis.com/v0/b/songoverapp.appspot.com/o/app_screenshots%2FScreenshot_20220127-201351.png?alt=media&token=a56f5a2b-3ea6-4825-b0ad-c7c0705a6878)
+![screen_0](https://firebasestorage.googleapis.com/v0/b/songoverapp.appspot.com/o/app_screenshots%2FScreenshot_20220127-201223.png?alt=media&token=efcfaf50-1851-4d93-bd7b-f448b95004cd)
+![screen_1](https://firebasestorage.googleapis.com/v0/b/songoverapp.appspot.com/o/app_screenshots%2FScreenshot_20220127-201351.png?alt=media&token=684eb427-3d68-4d99-99ef-aa860b9905fe)
+![screen_2](https://firebasestorage.googleapis.com/v0/b/songoverapp.appspot.com/o/app_screenshots%2FScreenshot_20220127-201318.png?alt=media&token=6670f5af-6035-40b1-92c7-26c32c4ca1f0)
