@@ -38,20 +38,31 @@ import com.skydoves.landscapist.glide.GlideImage
 fun MusicList(
     list: List<Song>,
     itemClickListener: OnItemClickListener,
-    curPlayingSongItem: SongItem?
+    curPlayingSongItem: SongItem?,
+    onRefresh: () -> Unit
 ) {
-    LazyColumn(modifier = Modifier ) {
+    LazyColumn(modifier = Modifier) {
         items(items = list, itemContent = { song: Song ->
             var songState = SongState.STOPPED
-            if(curPlayingSongItem?.song?.mediaId == song.mediaId)
+            if (curPlayingSongItem?.song?.mediaId == song.mediaId)
                 songState = curPlayingSongItem.songState
-            SongItem(song = song, songPosition = list.indexOf(song), itemClickListener, songState)
+            SongItem(
+                song = song,
+                songPosition = list.indexOf(song),
+                itemClickListener,
+                songState
+            )
         })
     }
 }
 
 @Composable
-fun SongItem(song: Song, songPosition: Int, itemClickListener: OnItemClickListener, songState : SongState = SongState.STOPPED) {
+fun SongItem(
+    song: Song,
+    songPosition: Int,
+    itemClickListener: OnItemClickListener,
+    songState: SongState = SongState.STOPPED
+) {
 
 
     val defaultDominantColor = MaterialTheme.colors.surface
@@ -79,26 +90,20 @@ fun SongItem(song: Song, songPosition: Int, itemClickListener: OnItemClickListen
         )
 
         {
-                if (songState == SongState.PLAYING) {
-                    Text(
-                        modifier = Modifier
-                            .rotate(90f)
-                            .offset(y = 15.dp),
-                        text = "PLAYING",
-                        maxLines = 1,
-                        overflow = TextOverflow.Visible,
-                        textAlign = TextAlign.Center
-                    )
-                } else if (songState == SongState.PAUSED)
-                    Text(
-                        modifier = Modifier
-                            .rotate(90f)
-                            .offset(y = 15.dp),
-                        text = "PAUSED",
-                        maxLines = 1,
-                        textAlign = TextAlign.Center,
-                        overflow = TextOverflow.Visible
-                    )
+
+            Text(
+                modifier = Modifier
+                    .rotate(90f)
+                    .offset(y = 15.dp),
+                text = when (songState) {
+                    SongState.PLAYING -> "PLAYING"
+                    SongState.PAUSED -> "PAUSED"
+                    SongState.STOPPED -> ""
+                },
+                maxLines = 1,
+                overflow = TextOverflow.Visible,
+                textAlign = TextAlign.Center
+            )
             Row(
                 modifier = Modifier
                     .padding(SongPadding)

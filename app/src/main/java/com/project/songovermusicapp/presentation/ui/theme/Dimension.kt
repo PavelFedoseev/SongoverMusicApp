@@ -7,6 +7,9 @@ val SongPadding = 10.dp
 val SongImageSize = 60.dp
 val SongImageRoundness = 12.dp
 
+val TopAppBarHeight = 60.dp
+val TopAppBarLogosPadding = 4.dp
+
 val BottomBarPadding = 8.dp
 val BottomBarPlayerRoundness = 30.dp
 val BottomBarItemSpacer = 80.dp
@@ -18,7 +21,8 @@ val MusicSeekBarTimePaddingToProgress = 30.dp
 val TabCategoryExpandedSize = 26.sp
 val TabCategoryCollapsedSize = 16.sp
 val TabCategoryPadding = 8.dp
-val TabCategoryHeight = 50.dp
+val TabCategoryPaddingVertical = 12.dp
+val TabCategoryHeight = 60.dp
 
 val SongItemTextTitle = 17.sp
 val SongItemTextSubtitle = 13.sp
@@ -35,7 +39,7 @@ val MusicItemScreenControllerBtnPadding = 10.dp
 val MusicItemScreenControllerHeight = 60.dp
 val MusicItemScreenControllerProgressSize = 200.dp
 
-val AppBarTextLogoSize = 80.dp
+val AppBarTextLogoSize = 40.dp
 
 val MusicItemScreenTitle = 20.sp
 val MusicItemScreenSubtitle = 18.sp

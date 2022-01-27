@@ -15,9 +15,11 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Snackbar
 import androidx.compose.material.Surface
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
@@ -48,6 +50,7 @@ class MainActivity : ComponentActivity() {
     private var readPermissionGranted = false
     private var writePermissionGranted = false
 
+    @ExperimentalComposeUiApi
     @ExperimentalMaterialApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -119,22 +122,22 @@ class MainActivity : ComponentActivity() {
             }
             SongoverMusicAppTheme {
                 val navController = rememberNavController()
-
                 val destinationChangeListener =
                     NavController.OnDestinationChangedListener { _, destination, _ ->
                         if(destination.route == "splash_screen"){
                             this@MainActivity.finish()
                         }
                     }
+
                 Surface(modifier = Modifier.fillMaxSize()) {
                     NavHost(
                         navController = navController,
+                        /** NavHost startDestination определяется из BuildConfig */
                         startDestination = "splash_screen",
                         modifier = Modifier.fillMaxSize(),
-
-                    ) {
+                        ) {
                         composable("splash_screen") {
-                            SplashScreen(navController)
+                            SplashScreen(navController, mainViewModel)
                         }
                         composable("main_screen") {
                             navController.addOnDestinationChangedListener(destinationChangeListener)
@@ -178,15 +181,13 @@ class MainActivity : ComponentActivity() {
             writePermissionGranted = permissions[Manifest.permission.WRITE_EXTERNAL_STORAGE] ?: writePermissionGranted
 
             if(readPermissionGranted) {
-//                loadPhotosFromExternalStorageIntoRecyclerView()
+                mainViewModel.onPermissionGranted(true)
             } else {
                 Toast.makeText(this, "Can't read files without permission.", Toast.LENGTH_LONG).show()
             }
         }
         updateOrRequestPermissions()
     }
-
-
 
     private fun updateOrRequestPermissions() {
         val hasReadPermission = ContextCompat.checkSelfPermission(
@@ -213,6 +214,8 @@ class MainActivity : ComponentActivity() {
             permissionsLauncher.launch(permissionsToRequest.toTypedArray())
         }
     }
+
+
 
 }
 

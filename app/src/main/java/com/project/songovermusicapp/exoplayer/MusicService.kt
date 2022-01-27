@@ -15,6 +15,7 @@ import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.project.songovermusicapp.START_SOURCE
 import com.project.songovermusicapp.data.constants.Constants.EXTERNAL_ERROR_EVENT
 import com.project.songovermusicapp.data.constants.Constants.MEDIA_FIREBASE_ID
 import com.project.songovermusicapp.data.constants.Constants.MEDIA_LOCAL_ID
@@ -26,7 +27,10 @@ import com.project.songovermusicapp.exoplayer.source.FirebaseMusicSource
 import com.project.songovermusicapp.exoplayer.source.LocalMusicSource
 import com.project.songovermusicapp.exoplayer.source.MediaSource
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -74,6 +78,7 @@ class MusicService : MediaBrowserServiceCompat() {
     override fun onCreate() {
         super.onCreate()
         initLocalPreparer()
+        initFirebasePreparer()
         val activityIntent = packageManager.getLaunchIntentForPackage(packageName)?.let {
             PendingIntent.getActivity(this, 0, it, 0)
         }
@@ -112,7 +117,43 @@ class MusicService : MediaBrowserServiceCompat() {
 
     }
 
-    fun initFirebasePreparer(){
+    override fun onCustomAction(action: String, extras: Bundle?, result: Result<Bundle>) {
+        if (action == "PreparePlayer") {
+            val source = extras?.getString("SOURCE") ?: START_SOURCE
+            when (source) {
+                MEDIA_LOCAL_ID -> {
+                    mediaSessionConnector.setQueueNavigator(
+                        MusicQueueNavigator(
+                            localMusicSource
+                        )
+                    )
+                    preparePlayer(
+                        localMusicSource.songs,
+                        localMusicSource.asMediaSource(dataSourceFactory),
+                        curPlayingSong,
+                        true
+                    )
+                }
+                MEDIA_FIREBASE_ID -> {
+                    mediaSessionConnector.setQueueNavigator(
+                        MusicQueueNavigator(
+                            firebaseMusicSource
+                        )
+                    )
+                    preparePlayer(
+                        firebaseMusicSource.songs,
+                        firebaseMusicSource.asMediaSource(dataSourceFactory),
+                        curPlayingSong,
+                        true
+                    )
+                }
+            }
+            result.detach()
+
+        }
+    }
+
+    private fun initFirebasePreparer() {
         firebaseMusicPreparer = MusicPlaybackPreparer(firebaseMusicSource) {
             //колбэк когда выбран новый трек
             curPlayingSong = it
@@ -131,7 +172,7 @@ class MusicService : MediaBrowserServiceCompat() {
 
     }
 
-    fun initLocalPreparer(){
+    fun initLocalPreparer() {
         localMusicPreparer = MusicPlaybackPreparer(localMusicSource) {
             //колбэк когда выбран новый трек
             curPlayingSong = it
@@ -199,19 +240,21 @@ class MusicService : MediaBrowserServiceCompat() {
                 val resultSent = firebaseMusicSource.whenReady { isInitialized ->
                     if (isInitialized) {
                         result.sendResult(firebaseMusicSource.asMediaItems())
-                        mediaSessionConnector.setQueueNavigator(
-                            MusicQueueNavigator(
-                                firebaseMusicSource
-                            )
-                        )
+//                        if(firebaseMusicSource.songs.isNotEmpty())
+//                        mediaSessionConnector.setQueueNavigator(
+//                            MusicQueueNavigator(
+//                                firebaseMusicSource
+//                            )
+//                        )
                         if (curPlayingSource != parentId && firebaseMusicSource.songs.isNotEmpty()) {
                             mediaSessionConnector.setPlaybackPreparer(firebaseMusicPreparer)
-                            preparePlayer(
-                                firebaseMusicSource.songs,
-                                firebaseMusicSource.asMediaSource(dataSourceFactory),
-                                firebaseMusicSource.songs[0],
-                                false
-                            )
+//                            if (firebaseMusicSource.songs.size != 0)
+//                                preparePlayer(
+//                                    firebaseMusicSource.songs,
+//                                    firebaseMusicSource.asMediaSource(dataSourceFactory),
+//                                    firebaseMusicSource.songs[0],
+//                                    false
+//                                )
                             isPlayerInitialized = true
                             curPlayingSource = parentId
                         }
@@ -230,19 +273,20 @@ class MusicService : MediaBrowserServiceCompat() {
                 val resultSent = localMusicSource.whenReady { isInitialized ->
                     if (isInitialized) {
                         result.sendResult(localMusicSource.asMediaItems())
-                        mediaSessionConnector.setQueueNavigator(
-                            MusicQueueNavigator(
-                                localMusicSource
-                            )
-                        )
+                        if (localMusicSource.songs.isNotEmpty())
+//                            mediaSessionConnector.setQueueNavigator(
+//                                MusicQueueNavigator(
+//                                    localMusicSource
+//                                )
+//                            )
                         if (curPlayingSource != parentId && localMusicSource.songs.isNotEmpty()) {
                             mediaSessionConnector.setPlaybackPreparer(localMusicPreparer)
-                            preparePlayer(
-                                localMusicSource.songs,
-                                localMusicSource.asMediaSource(dataSourceFactory),
-                                localMusicSource.songs[0],
-                                false
-                            )
+//                            preparePlayer(
+//                                localMusicSource.songs,
+//                                localMusicSource.asMediaSource(dataSourceFactory),
+//                                localMusicSource.songs[0],
+//                                false
+//                            )
                             isPlayerInitialized = true
                             curPlayingSource = parentId
                         }

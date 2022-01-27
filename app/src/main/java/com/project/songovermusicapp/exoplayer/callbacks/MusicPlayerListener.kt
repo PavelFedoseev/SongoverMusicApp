@@ -31,6 +31,8 @@ class MusicPlayerListener(
     }
 
      */
+
+
     override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
         super.onPlayerStateChanged(playWhenReady, playbackState)
         if(playbackState == Player.STATE_READY && !playWhenReady)

@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -36,6 +37,7 @@ import com.project.songovermusicapp.presentation.ui.viewmodel.MainCategory
 import com.project.songovermusicapp.presentation.ui.viewmodel.SongItem
 import com.project.songovermusicapp.presentation.util.OnDominantColorListener
 
+@ExperimentalComposeUiApi
 @ExperimentalMaterialApi
 @ExperimentalPagerApi
 @Composable
@@ -147,7 +149,7 @@ fun MainContent(
         }
         Column(modifier = Modifier.layoutId("mainContent")) {
             if (mainCategories.isNotEmpty()) {
-                TopBarLazyColumn(
+                TopCategoryBar(
                     modifier = Modifier.background(
                         Brush.verticalGradient(
                             listOf(
@@ -185,6 +187,7 @@ fun MainContent(
                 playbackState = playbackState,
                 curSongMetadata = curPlayingSong,
                 sessionQueueItems = curSongQueue,
+                songItems = songItems,
                 modifier = Modifier,
                 onItemClickListener = mediaListClickListener,
                 dominantColorListener = dominantColorListener,

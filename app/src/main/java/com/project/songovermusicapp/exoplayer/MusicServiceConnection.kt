@@ -17,6 +17,7 @@ import com.project.songovermusicapp.data.constants.Constants.EXTERNAL_ERROR_EVEN
 import com.project.songovermusicapp.data.constants.Constants.NETWORK_ERROR_EVENT
 import com.project.songovermusicapp.data.other.Event
 import com.project.songovermusicapp.data.other.Resource
+import com.project.songovermusicapp.reconnect
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -67,14 +68,18 @@ class MusicServiceConnection(private val context: Context) {
         mediaBrowser.subscribe(parentId, callback)
     }
 
+    fun reconnect(){
+        mediaBrowser.reconnect()
+    }
+
     /** Отписка от объектов медиа по parentId*/
     fun unsubscribe(parentId: String, callback: MediaBrowserCompat.SubscriptionCallback) {
         mediaBrowser.unsubscribe(parentId, callback)
     }
 
-    fun changeLoadChild(parentId: String){
+    fun preparePlayer(source: String){
+        mediaBrowser.sendCustomAction("PreparePlayer", Bundle().apply { putString("SOURCE", source) }, null)
     }
-
 
 
     private inner class MediaBrowserConnectionCallback(

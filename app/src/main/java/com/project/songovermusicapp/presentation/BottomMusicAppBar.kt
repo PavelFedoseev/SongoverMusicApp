@@ -11,7 +11,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.stopScroll
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
@@ -64,18 +64,19 @@ fun BottomMusicBar(
     onItemClickListener: OnItemClickListener,
     dominantColorListener: OnDominantColorListener,
     navController: NavController,
-    isShuffle: Boolean
+    isShuffle: Boolean,
+    songItems: List<Song>
 ) {
 
-    var curPlayingSongItem by remember { mutableStateOf(SongItem.stopped()) }
+    var curSongItem by remember { mutableStateOf(SongItem.stopped()) }
 
     curSongMetadata?.toSong()?.let {
         when (playbackState?.state) {
             PlaybackStateCompat.STATE_PAUSED -> {
-                curPlayingSongItem = SongItem.paused(it)
+                curSongItem = SongItem.paused(it)
             }
             PlaybackStateCompat.STATE_PLAYING -> {
-                curPlayingSongItem = SongItem.playing(it)
+                curSongItem = SongItem.playing(it)
             }
             else -> {
 
@@ -83,28 +84,26 @@ fun BottomMusicBar(
         }
     }
 
-    val curQueueItems = sessionQueueItems?: emptyList()
-
     val pagerState = rememberPagerState(
-        pageCount = curQueueItems.size,
-        initialOffscreenLimit = 2
+        pageCount = songItems.size,
+        initialPage = 0
     )
 
-    var currentPage by remember {
+    var newPageIndex by remember {
         mutableStateOf(0)
     }
 
+
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collect { page ->
-            if (page + 1 == currentPage || page - 1 == currentPage) {
-                if (page + 1 == currentPage) {
-                    onItemClickListener.onItemClickPrevious()
-                } else {
-                    onItemClickListener.onItemClickNext()
-                }
-            } else pagerState.stopScroll()
+            when (newPageIndex) {
+                page + 1 -> onItemClickListener.onItemClickPrevious()
+                page - 1 -> onItemClickListener.onItemClickNext()
+            }
         }
+        snapshotFlow { pagerState.isScrollInProgress }
     }
+
     var dominantColor by remember { mutableStateOf(Color.Transparent) }
     val animateDominantColor by animateColorAsState(targetValue = dominantColor)
 
@@ -143,35 +142,27 @@ fun BottomMusicBar(
             .clickable {
                 navController.navigate("music_item_screen")
             }) {
-            LaunchedEffect(key1 = curSongMetadata) {
 
-                if (curQueueItems.isNotEmpty()) {
-                    val queueItem = curQueueItems.find {
-                        it.description.mediaId == curSongMetadata?.description?.mediaId
-                    }
-                    if (queueItem != null && curQueueItems.indexOf(queueItem) != -1)
-                        currentPage = curQueueItems.indexOf(queueItem)
-                    if (pagerState.pageCount >= currentPage) {
-                        pagerState.animateScrollToPage(
-                            currentPage, initialVelocity = 0.5f,
-                            animationSpec = tween(
-                                durationMillis = 700,
-                                easing = FastOutSlowInEasing
-                            )
-                        )
-                    }
-                }
-            }
             HorizontalPager(
                 state = pagerState,
                 modifier = pagerModifier.layoutId("pagerConstraint")
             ) { page ->
-                if (page < curQueueItems.size) {
-
-                    PagerSongItem(song = curQueueItems[page].toSong())
-                }
-
+                PagerSongItem(song = songItems[page])
             }
+            LaunchedEffect(key1 = curSongMetadata) {
+                val index = songItems.indexOf(curSongMetadata?.toSong())
+                newPageIndex = index
+                if (index in 0..songItems.size)
+                    pagerState.animateScrollToPage(
+                        index, initialVelocity = 0.5f,
+                        animationSpec = tween(
+                            durationMillis = 700,
+                            easing = FastOutSlowInEasing
+                        )
+                    )
+            }
+
+
             Card(
                 modifier = Modifier
                     .width(SongImageSize)
@@ -184,7 +175,7 @@ fun BottomMusicBar(
                     modifier = Modifier
                         .width(SongImageSize)
                         .height(SongImageSize),
-                    imageModel = curPlayingSongItem.song?.imageUrl ?: "",
+                    imageModel = curSongItem.song?.imageUrl ?: "",
                     loading = {
                         ConstraintLayout(
                             modifier = Modifier.fillMaxSize()
@@ -234,10 +225,10 @@ fun BottomMusicBar(
                 shape = RoundedCornerShape(BottomBarPlayerRoundness),
                 elevation = 8.dp,
                 onClick = {
-                    curPlayingSongItem.song?.let { onItemClickListener.onItemClickPlay(it) }
+                    curSongItem.song?.let { onItemClickListener.onItemClickPlay(it) }
                 }
             ) {
-                val painter = when (curPlayingSongItem.songState) {
+                val painter = when (curSongItem.songState) {
                     SongState.PLAYING -> {
                         painterResource(id = R.drawable.ic_pause)
                     }

@@ -21,6 +21,7 @@ import com.project.songovermusicapp.exoplayer.extensions.currentPlaybackPosition
 import com.project.songovermusicapp.exoplayer.extensions.isPlayEnabled
 import com.project.songovermusicapp.exoplayer.extensions.isPlaying
 import com.project.songovermusicapp.exoplayer.extensions.isPrepared
+import com.project.songovermusicapp.exoplayer.toSong
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
@@ -31,6 +32,9 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     private val musicServiceConnection: MusicServiceConnection
 ) : ViewModel() {
+
+
+
     // Выбранная категория
     private val selectedCategory = MutableStateFlow(MainCategory.Songs)
 
@@ -44,6 +48,7 @@ class MainViewModel @Inject constructor(
         get() = _state
 
     private val refreshing = MutableStateFlow(false)
+
 
     private val _isShuffle = MutableLiveData(false)
     val isShuffle: LiveData<Boolean> = _isShuffle
@@ -112,23 +117,22 @@ class MainViewModel @Inject constructor(
         musicServiceConnection.transportControls.seekTo(pos)
     }
 
+
     fun shuffleToggle() {
         if (isShuffle.value == false) {
             musicServiceConnection.transportControls.setShuffleMode(SHUFFLE_MODE_ALL)
             _isShuffle.postValue(true)
-        }
-        else {
+        } else {
             musicServiceConnection.transportControls.setShuffleMode(SHUFFLE_MODE_NONE)
             _isShuffle.postValue(false)
         }
     }
 
-    fun repeatToggle(){
-        if(isRepeat.value == false) {
+    fun repeatToggle() {
+        if (isRepeat.value == false) {
             musicServiceConnection.transportControls.setRepeatMode(REPEAT_MODE_ONE)
             _isRepeat.postValue(true)
-        }
-        else{
+        } else {
             musicServiceConnection.transportControls.setRepeatMode(REPEAT_MODE_NONE)
             _isRepeat.postValue(false)
         }
@@ -157,16 +161,19 @@ class MainViewModel @Inject constructor(
 //            musicServiceConnection.preparePlayer(position)
 //        }
         playOrToggleSong(mediaItem, toggle)
+        if (resourceMediaItems.value?.data?.contains(curPlayingSong.value?.toSong()) == false) {
+            musicServiceConnection.preparePlayer(selectedCategory.value.toString())
+        }
     }
 
     fun onMainCategorySelected(category: MainCategory) {
         selectedCategory.value = category
         when (category) {
             MainCategory.Remote -> {
-                subscribeToSource(MEDIA_LOCAL_ID)
+                subscribeToSource(category.toString())
             }
             MainCategory.Songs -> {
-                subscribeToSource(MEDIA_LOCAL_ID)
+                subscribeToSource(category.toString())
             }
         }
     }
@@ -191,6 +198,11 @@ class MainViewModel @Inject constructor(
                 delay(Constants.UPDATE_PLAYER_POSITION_INTERVAL)
             }
         }
+    }
+
+    fun onPermissionGranted(isReconnect: Boolean = false) {
+        if(isReconnect)
+        musicServiceConnection.reconnect()
     }
 
 
@@ -224,11 +236,27 @@ class MainViewModel @Inject constructor(
             object : MediaBrowserCompat.SubscriptionCallback() {})
     }
 
+    fun onSourceSelected(source: String) {
+        musicServiceConnection.preparePlayer(source)
+    }
+
 }
 
 enum class MainCategory {
-    Songs, Remote
+    Songs, Remote;
+
+    override fun toString(): String {
+        return when (this) {
+            Songs -> {
+                MEDIA_LOCAL_ID
+            }
+            Remote -> {
+                MEDIA_FIREBASE_ID
+            }
+        }
+    }
 }
+
 
 data class MainViewState(
     val refreshing: Boolean = false,
