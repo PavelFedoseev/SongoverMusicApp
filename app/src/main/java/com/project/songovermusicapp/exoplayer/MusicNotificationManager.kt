@@ -7,6 +7,7 @@ import android.graphics.drawable.Drawable
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.Transformation
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.google.android.exoplayer2.Player
@@ -19,7 +20,7 @@ class MusicNotificationManager(
     private val context: Context,
     sessionToken: MediaSessionCompat.Token,
     notificationListener: PlayerNotificationManager.NotificationListener,
-    private val soundCallback: () -> Unit
+    private val songCallback: () -> Unit
 ) {
     val mediaController = MediaControllerCompat(context, sessionToken)
     private val notificationManager: PlayerNotificationManager
@@ -45,8 +46,10 @@ class MusicNotificationManager(
 
     private inner class DescriptionAdapter(private val mediaController: MediaControllerCompat) :
         PlayerNotificationManager.MediaDescriptionAdapter {
-        override fun getCurrentContentTitle(player: Player): CharSequence =
-            mediaController.metadata.description.title.toString()
+        override fun getCurrentContentTitle(player: Player): CharSequence {
+            songCallback()
+            return mediaController.metadata.description.title.toString()
+        }
 
         override fun createCurrentContentIntent(player: Player): PendingIntent? =
             mediaController.sessionActivity

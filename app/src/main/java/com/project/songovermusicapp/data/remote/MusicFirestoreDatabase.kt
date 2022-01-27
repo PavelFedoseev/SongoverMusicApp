@@ -5,7 +5,7 @@ import com.project.songovermusicapp.data.constants.Constants.SONG_COLLECTION
 import com.project.songovermusicapp.data.entities.Song
 import kotlinx.coroutines.tasks.await
 
-class MusicDatabase {
+class MusicFirestoreDatabase {
 
     private val firestore = FirebaseFirestore.getInstance()
     private val songCollection = firestore.collection(SONG_COLLECTION)
